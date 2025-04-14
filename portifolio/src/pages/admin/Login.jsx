@@ -29,7 +29,7 @@ const Login = () => {
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center px-4">
-      <div className="max-w-md w-full space-y-8 bg-gray-900 p-8 rounded-xl shadow-lg">
+      <div className="max-w-md w-full space-y-8 bg-gray-200 p-8 rounded-xl shadow-lg">
         <div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-text">
             Admin Login
@@ -49,7 +49,7 @@ const Login = () => {
                 name="email"
                 type="email"
                 required
-                className="appearance-none rounded-lg relative block w-full px-3 py-2 border border-gray-700 bg-gray-800 text-text placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                className="appearance-none rounded-lg relative block w-full px-3 py-2 border border-gray-700 bg-gray-200 text-text placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                 placeholder="Email address"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -62,7 +62,7 @@ const Login = () => {
                 name="password"
                 type="password"
                 required
-                className="appearance-none rounded-lg relative block w-full px-3 py-2 border border-gray-700 bg-gray-800 text-text placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                className="appearance-none rounded-lg relative block w-full px-3 py-2 border border-gray-700 bg-gray-200 text-text placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                 placeholder="Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}

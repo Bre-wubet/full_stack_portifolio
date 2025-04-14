@@ -22,13 +22,13 @@ const Dashboard = () => {
     <div className="min-h-screen bg-background flex">
       {/* Sidebar */}
       <aside
-        className={`${isSidebarOpen ? 'w-64' : 'w-20'} bg-gray-900 text-text transition-all duration-300 ease-in-out`}
+        className={`${isSidebarOpen ? 'w-64' : 'w-20'} bg-gray-200 text-text transition-all duration-300 ease-in-out`}
       >
         <div className="h-20 flex items-center justify-between px-4">
           <h1 className={`${!isSidebarOpen && 'hidden'} font-bold text-xl`}>Admin Panel</h1>
           <button
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-            className="p-2 rounded-lg hover:bg-gray-800 transition-colors"
+            className="p-2 rounded-lg hover:bg-gray-300 transition-colors"
           >
             {isSidebarOpen ? '◀' : '▶'}
           </button>
@@ -40,7 +40,7 @@ const Dashboard = () => {
               <li key={item.path}>
                 <Link
                   to={item.path}
-                  className="flex items-center px-4 py-3 text-gray-300 hover:bg-primary/10 hover:text-primary transition-colors"
+                  className="flex items-center px-4 py-3 text-gray-900 hover:hover:bg-gray-300 hover:text-primary transition-colors"
                 >
                   <span className="text-xl">{item.icon}</span>
                   <span className={`${!isSidebarOpen && 'hidden'} ml-3`}>{item.label}</span>
@@ -50,7 +50,7 @@ const Dashboard = () => {
             <li>
               <button
                 onClick={handleLogout}
-                className="w-full flex items-center px-4 py-3 text-gray-300 hover:bg-primary/10 hover:text-primary transition-colors"
+                className="w-full flex items-center px-4 py-3 text-gray-900 hover:bg-gray-300 hover:text-primary transition-colors"
               >
                 <span className="text-xl">🔐</span>
                 <span className={`${!isSidebarOpen && 'hidden'} ml-3`}>Logout</span>

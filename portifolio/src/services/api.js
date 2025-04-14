@@ -43,11 +43,21 @@ export const projectService = {
     return response.data;
   },
   createProject: async (projectData) => {
-    const response = await api.post('/projects', projectData);
+    const config = {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    };
+    const response = await api.post('/projects', projectData, config);
     return response.data;
   },
   updateProject: async (id, projectData) => {
-    const response = await api.put(`/projects/${id}`, projectData);
+    const config = {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    };
+    const response = await api.put(`/projects/${id}`, projectData, config);
     return response.data;
   },
   deleteProject: async (id) => {

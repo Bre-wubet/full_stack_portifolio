@@ -52,7 +52,7 @@ router.post('/', auth, adminOnly, upload.single('image'), async (req, res) => {
     const project = new Project({
       title,
       description,
-      techStack: JSON.parse(techStack),
+      techStack: techStack.split(','),
       imageUrl: imageUrl || req.body.imageUrl,
       githubUrl,
       liveDemoUrl
@@ -81,7 +81,7 @@ router.put('/:id', auth, adminOnly, upload.single('image'), async (req, res) => 
     }
 
     if (updates.techStack) {
-      updates.techStack = JSON.parse(updates.techStack);
+      updates.techStack = updates.techStack.split(',');
     }
 
     const project = await Project.findByIdAndUpdate(

@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
+import Register from './pages/admin/Register';
 import Login from './pages/admin/Login';
 import Dashboard from './pages/admin/Dashboard';
 import ManageProjects from './pages/admin/ManageProjects';
@@ -184,6 +185,7 @@ const App = () => {
             {/* Public Routes */}
             <Route path="/" element={<HomePage />} />
             <Route path="/admin/login" element={<Login />} />
+            <Route path="/admin/register" element={<Register />} />
 
             {/* Protected Admin Routes */}
             <Route

@@ -65,14 +65,14 @@ const ManageProjects = () => {
         <h2 className="text-3xl font-bold text-text">Manage Projects</h2>
         <Link
           to="/admin/dashboard/new"
-          className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
+          className="px-2 py-2 mx-2 bg-gray-300 text-black rounded-lg hover:bg-gray-400 hover:text-primary transition-colors"
         >
-          Add New Project
+          New Project
         </Link>
       </div>
 
       {projects.length === 0 ? (
-        <div className="text-center py-12 bg-gray-900 rounded-lg">
+        <div className="text-center py-12 bg-gray-200 rounded-lg">
           <p className="text-gray-400 mb-4">No projects found</p>
           <Link
             to="/admin/dashboard/new"

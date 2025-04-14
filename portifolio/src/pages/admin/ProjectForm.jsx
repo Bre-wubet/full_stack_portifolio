@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { projectService } from '../../services/api';
-import axios from 'axios';
 
 const ProjectForm = () => {
   const { id } = useParams();
@@ -73,34 +72,52 @@ const ProjectForm = () => {
     setLoading(true);
     setError('');
 
+    // Validate required fields
+    const requiredFields = ['title', 'description', 'githubUrl', 'liveDemoUrl'];
+    const missingFields = requiredFields.filter(field => !formData[field]);
+    
+    if (missingFields.length > 0) {
+      setError(`Please fill in all required fields: ${missingFields.join(', ')}`);
+      setLoading(false);
+      return;
+    }
+
+    if (formData.techStack.length === 0) {
+      setError('Please add at least one technology to the tech stack');
+      setLoading(false);
+      return;
+    }
+
+    if (!imageFile && !formData.imageUrl) {
+      setError('Please upload a project image');
+      setLoading(false);
+      return;
+    }
+
     try {
       const formDataObj = new FormData();
       
-      Object.keys(formData).forEach(key => {
-        if (key === 'techStack') {
-          formDataObj.append(key, JSON.stringify(formData[key]));
-        } else {
-          formDataObj.append(key, formData[key]);
-        }
+      // Append all form fields
+      formDataObj.append('title', formData.title.trim());
+      formDataObj.append('description', formData.description.trim());
+      formData.techStack.forEach((tech, index) => {
+        formDataObj.append(`techStack[${index}]`, tech);
       });
+      formDataObj.append('githubUrl', formData.githubUrl.trim());
+      formDataObj.append('liveDemoUrl', formData.liveDemoUrl.trim());
 
+      // Handle image upload
       if (imageFile) {
         formDataObj.append('image', imageFile);
+      } else if (formData.imageUrl) {
+        formDataObj.append('imageUrl', formData.imageUrl);
       }
-
-      const token = localStorage.getItem('token');
-      const config = {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'multipart/form-data'
-        }
-      };
 
       let data;
       if (id) {
-        data = await axios.put(`http://localhost:5000/api/projects/${id}`, formDataObj, config);
+        data = await projectService.updateProject(id, formDataObj);
       } else {
-        data = await axios.post('http://localhost:5000/api/projects', formDataObj, config);
+        data = await projectService.createProject(formDataObj);
       }
 
       navigate('/admin/dashboard/manage');
@@ -136,7 +153,7 @@ const ProjectForm = () => {
             value={formData.title}
             onChange={handleInputChange}
             required
-            className="w-full px-4 py-2 rounded-lg bg-gray-900 border border-gray-700 text-text focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+            className="w-full px-4 py-2 rounded-lg bg-gray-200 border border-gray-700 text-text focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
           />
         </div>
 
@@ -151,7 +168,7 @@ const ProjectForm = () => {
             onChange={handleInputChange}
             required
             rows="4"
-            className="w-full px-4 py-2 rounded-lg bg-gray-900 border border-gray-700 text-text focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+            className="w-full px-4 py-2 rounded-lg bg-gray-200 border border-gray-700 text-text focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
           ></textarea>
         </div>
 
@@ -163,13 +180,13 @@ const ProjectForm = () => {
             {formData.techStack.map((tech, index) => (
               <span
                 key={index}
-                className="px-3 py-1 bg-primary/10 text-primary rounded-full flex items-center gap-2"
+                className="px-3 py-1 bg-gray-200 text-primary rounded-full flex items-center gap-2"
               >
                 {tech}
                 <button
                   type="button"
                   onClick={() => handleRemoveTech(tech)}
-                  className="text-primary hover:text-primary/70"
+                  className="text-black hover:text-primary/70"
                 >
                   ×
                 </button>
@@ -181,13 +198,13 @@ const ProjectForm = () => {
               type="text"
               value={techInput}
               onChange={(e) => setTechInput(e.target.value)}
-              className="flex-1 px-4 py-2 rounded-lg bg-gray-900 border border-gray-700 text-text focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+              className="flex-1 px-4 py-2 rounded-lg bg-gray-200 border border-gray-700 text-text focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
               placeholder="Add technology"
             />
             <button
               type="button"
               onClick={handleAddTech}
-              className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
+              className="px-4 py-2 bg-gray-500 text-black rounded-lg hover:bg-primary transition-colors"
             >
               Add
             </button>
@@ -224,7 +241,7 @@ const ProjectForm = () => {
             value={formData.githubUrl}
             onChange={handleInputChange}
             required
-            className="w-full px-4 py-2 rounded-lg bg-gray-900 border border-gray-700 text-text focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+            className="w-full px-4 py-2 rounded-lg bg-gray-200 border border-gray-700 text-text focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
           />
         </div>
 
@@ -239,7 +256,7 @@ const ProjectForm = () => {
             value={formData.liveDemoUrl}
             onChange={handleInputChange}
             required
-            className="w-full px-4 py-2 rounded-lg bg-gray-900 border border-gray-700 text-text focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+            className="w-full px-4 py-2 rounded-lg bg-gray-200 border border-gray-700 text-text focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
           />
         </div>
 
@@ -254,7 +271,7 @@ const ProjectForm = () => {
           <button
             type="submit"
             disabled={loading}
-            className="px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-6 py-2 bg-gray-500 text-black rounded-lg hover:bg-primary/100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? 'Saving...' : 'Save Project'}
           </button>
