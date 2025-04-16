@@ -35,7 +35,26 @@ router.get('/', async (req, res) => {
 // Create new project (admin only)
 router.post('/', auth, adminOnly, upload.single('image'), async (req, res) => {
   try {
-    const { title, description, techStack, githubUrl, liveDemoUrl } = req.body;
+    const { title, description, techStack, githubUrl, liveDemoUrl, status, category } = req.body;
+
+    // Validate required fields
+    if (!title || !description || !techStack || !githubUrl || !liveDemoUrl) {
+      return res.status(400).json({ message: 'All fields are required' });
+    }
+
+    // // Validate status and category if provided
+    // if (status && !['in-progress', 'completed', 'archived'].includes(status)) {
+    //   return res.status(400).json({ message: 'Invalid status value' });
+    // }
+    // if (category && !['web', 'mobile', 'desktop', 'other'].includes(category)) {
+    //   return res.status(400).json({ message: 'Invalid category value' });
+    // }
+
+    // Ensure techStack is an array of strings
+    const techStackArray = Array.isArray(techStack) ? techStack : techStack.split(',').map(tech => tech.trim()).filter(Boolean);
+    if (!techStackArray.length) {
+      return res.status(400).json({ message: 'Tech stack must not be empty' });
+    }
 
     // Upload image to Cloudinary if provided
     let imageUrl = '';
@@ -47,15 +66,19 @@ router.post('/', auth, adminOnly, upload.single('image'), async (req, res) => {
         { folder: 'portfolio-projects' }
       );
       imageUrl = result.secure_url;
+    } else {
+      return res.status(400).json({ message: 'Project image is required' });
     }
 
     const project = new Project({
       title,
       description,
-      techStack: techStack.split(','),
-      imageUrl: imageUrl || req.body.imageUrl,
+      techStack,
+      imageUrl,
       githubUrl,
-      liveDemoUrl
+      liveDemoUrl,
+      status,
+      category
     });
 
     await project.save();
@@ -81,8 +104,23 @@ router.put('/:id', auth, adminOnly, upload.single('image'), async (req, res) => 
     }
 
     if (updates.techStack) {
-      updates.techStack = updates.techStack.split(',');
+      const techStackArray = Array.isArray(updates.techStack) ? updates.techStack : updates.techStack.split(',').map(tech => tech.trim()).filter(Boolean);
+      if (!techStackArray.length) {
+        return res.status(400).json({ message: 'Tech stack must not be empty' });
+      }
+      updates.techStack = techStackArray;
     }
+
+    // Validate status and category if being updated
+    if (updates.status && !['in-progress', 'completed', 'archived'].includes(updates.status)) {
+      return res.status(400).json({ message: 'Invalid status value' });
+    }
+    if (updates.category && !['web', 'mobile', 'desktop', 'other'].includes(updates.category)) {
+      return res.status(400).json({ message: 'Invalid category value' });
+    }
+
+    // Update the updatedAt field
+    updates.updatedAt = new Date();
 
     const project = await Project.findByIdAndUpdate(
       req.params.id,

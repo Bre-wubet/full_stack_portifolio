@@ -6,21 +6,27 @@ export const auth = async (req, res, next) => {
     const token = req.header('Authorization')?.replace('Bearer ', '');
     
     if (!token) {
-      throw new Error('Authentication required');
+      return res.status(401).json({ message: 'Authentication token required' });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
-    const user = await User.findById(decoded.userId);
+    let decoded;
+    try {
+      decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+    } catch (err) {
+      return res.status(401).json({ message: 'Invalid or expired token' });
+    }
 
+    const user = await User.findById(decoded.userId);
     if (!user) {
-      throw new Error('User not found');
+      return res.status(401).json({ message: 'User not found' });
     }
 
     req.user = user;
     req.token = token;
     next();
   } catch (error) {
-    res.status(401).json({ message: 'Please authenticate' });
+    console.error('Auth middleware error:', error);
+    res.status(500).json({ message: 'Server error during authentication' });
   }
 };
 

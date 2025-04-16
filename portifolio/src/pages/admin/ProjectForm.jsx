@@ -51,19 +51,21 @@ const ProjectForm = () => {
 
   const handleAddTech = (e) => {
     e.preventDefault();
-    if (techInput.trim() && !formData.techStack.includes(techInput.trim())) {
-      setFormData(prev => ({
-        ...prev,
-        techStack: [...prev.techStack, techInput.trim()]
-      }));
-      setTechInput('');
+    if (techInput.trim()) {
+      if (!formData.techStack.includes(techInput.trim())) {
+        setFormData(prev => ({
+          ...prev,
+          techStack: [...prev.techStack, techInput.trim()]
+        }));
+        setTechInput('');
+      }
     }
   };
 
-  const handleRemoveTech = (tech) => {
+  const handleRemoveTech = (techToRemove) => {
     setFormData(prev => ({
       ...prev,
-      techStack: prev.techStack.filter(t => t !== tech)
+      techStack: prev.techStack.filter(tech => tech !== techToRemove)
     }));
   };
 
@@ -82,7 +84,7 @@ const ProjectForm = () => {
       return;
     }
 
-    if (formData.techStack.length === 0) {
+    if (!formData.techStack) {
       setError('Please add at least one technology to the tech stack');
       setLoading(false);
       return;
@@ -100,9 +102,7 @@ const ProjectForm = () => {
       // Append all form fields
       formDataObj.append('title', formData.title.trim());
       formDataObj.append('description', formData.description.trim());
-      formData.techStack.forEach((tech, index) => {
-        formDataObj.append(`techStack[${index}]`, tech);
-      });
+      formDataObj.append('techStack', formData.techStack);
       formDataObj.append('githubUrl', formData.githubUrl.trim());
       formDataObj.append('liveDemoUrl', formData.liveDemoUrl.trim());
 

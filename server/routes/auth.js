@@ -35,18 +35,29 @@ router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
     
+    if (!email || !password) {
+      return res.status(400).json({ message: 'Email and password are required' });
+    }
+
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(401).json({ message: 'Invalid credentials' });
+      return res.status(401).json({ message: 'Email not found' });
     }
 
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
-      return res.status(401).json({ message: 'Invalid credentials' });
+      return res.status(401).json({ message: 'Incorrect password' });
     }
 
     const token = user.generateAuthToken();
-    res.json({ user, token });
+    res.json({ 
+      user: { 
+        _id: user._id,
+        email: user.email,
+        role: user.role 
+      }, 
+      token 
+    });
   } catch (error) {
     res.status(400).json({ message: error.message });
   }
