@@ -97,7 +97,7 @@ const ManageProjects = () => {
                 <h3 className="text-xl font-semibold text-text mb-2">{project.title}</h3>
                 <p className="text-gray-400 mb-4 line-clamp-2">{project.description}</p>
                 <div className="flex flex-wrap gap-2 mb-4">
-                  {(project.techStack ? project.techStack.split(',') : []).map((tech, index) => (
+                  {(Array.isArray(project.techStack) ? project.techStack : []).map((tech, index) => (
                     <span
                       key={index}
                       className="px-2 py-1 bg-primary/10 text-primary rounded-full text-sm"
