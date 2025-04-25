@@ -3,6 +3,15 @@ export default {
   content: ["./src/**/*.{js,jsx,ts,tsx}"],
   theme: {
     extend: {
+      keyframes: {
+        scroll: {
+          '0%': { transform: 'translateX(0%)' },
+          '100%': { transform: 'translateX(-50%)' }, // Half for doubling the skills array
+        },
+      },
+      animation: {
+        scroll: 'scroll 20s linear infinite',
+      },
       colors: {
         primary: '#7E22CE',
         accent: '#A855F7',

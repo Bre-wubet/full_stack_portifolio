@@ -12,6 +12,7 @@ import Projects from './components/sections/Projects';
 import About from './components/sections/About';
 import Contact from './components/sections/Contact';
 import './App.css';
+import SkillsScroller from './components/sections/Skills';
 
 const HomePage = () => {
   return (
@@ -19,6 +20,7 @@ const HomePage = () => {
       <Navbar />
       <main>
         <Hero />
+        <SkillsScroller />
         <Projects />
         <About />
         <Contact />
