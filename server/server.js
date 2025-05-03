@@ -1,106 +1,53 @@
-import express from 'express';
 import cors from 'cors';
-import mongoose from 'mongoose';
+import express from 'express';
+import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
-import { fileURLToPath } from 'url';
-import { dirname } from 'path';
-import authRoutes from './routes/auth.js';
+import authenticateAdmin from './middleware/auth.js';
+import mongoose from 'mongoose';
 import projectRoutes from './routes/projects.js';
 
 dotenv.config();
-
 const app = express();
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-// Middleware
-app.use(cors());
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(cors({
+  origin: 'http://localhost:5173', // Replace with your frontend URL
+  credentials: true,
+}));
 
-// MongoDB Connection
-const connectDB = async () => {
-  try {
-    const conn = await mongoose.connect(process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/portfolio', {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
-    console.log(`MongoDB Connected: ${conn.connection.host}`);
-  } catch (error) {
-    console.error(`Error: ${error.message}`);
-    process.exit(1);
-  }
-};
+// MongoDB connection
 
-// Handle MongoDB connection events
-mongoose.connection.on('disconnected', () => {
-  console.log('MongoDB disconnected');
-});
+mongoose.connect(process.env.MONGODB_URI, { 
+  useNewUrlParser: true, 
+  useUnifiedTopology: true 
+})  .then(() => console.log('MongoDB connected'))
+  .catch(err => console.error('MongoDB connection error:', err));
 
-mongoose.connection.on('error', (err) => {
-  console.error('MongoDB connection error:', err);
-});
 
-// Connect to MongoDB
-connectDB();
+  // route to fetch all projects
 
-// Routes
+  app.use('/projects', projectRoutes);
+
+// Public route
 app.get('/', (req, res) => {
-  res.json({
-    message: 'Welcome to Portfolio API',
-    endpoints: {
-      auth: '/api/auth',
-      projects: '/api/projects'
-    },
-    status: 'healthy'
-  });
+  res.send('Welcome to my portfolio!');
 });
 
-app.use('/api/auth', authRoutes);
-app.use('/api/projects', projectRoutes);
-
-// Error handling middleware
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ message: 'Something went wrong!' });
-});
-
-const startServer = async (initialPort) => {
-  const findAvailablePort = async (startPort) => {
-    let port = startPort;
-    while (port < startPort + 10) { // Try up to 10 ports
-      try {
-        await new Promise((resolve, reject) => {
-          const server = app.listen(port, () => {
-            console.log(`Server running on port ${port}`);
-            resolve();
-          }).on('error', (err) => {
-            if (err.code === 'EADDRINUSE') {
-              console.log(`Port ${port} is in use, trying next port...`);
-              port++;
-              server.close();
-              resolve(port);
-            } else {
-              reject(err);
-            }
-          });
-        });
-        return; // If we get here, the server started successfully
-      } catch (error) {
-        console.error(`Error starting server on port ${port}:`, error);
-        port++;
-      }
-    }
-    throw new Error('Could not find an available port after multiple attempts');
-  };
-
-  try {
-    await findAvailablePort(initialPort);
-  } catch (error) {
-    console.error('Failed to start server:', error);
-    process.exit(1);
+// Admin login route
+app.post('/admin/login', (req, res) => {
+  const { username, password } = req.body;
+  if (username === process.env.ADMIN_USERNAME && password === process.env.ADMIN_PASSWORD) {
+    const token = jwt.sign({ username, role: 'admin' }, process.env.JWT_SECRET, { expiresIn: '2h' });
+    return res.json({ token });
   }
-};
+  res.status(401).json({ message: 'Invalid credentials' });
+});
+
+// Protected admin route
+app.get('/admin/dashboard', authenticateAdmin, (req, res) => {
+  res.send('Welcome to the admin dashboard.');
+});
 
 const PORT = process.env.PORT || 5000;
-startServer(PORT);
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import ProjectCard from '../ProjectCard';
-import { projectService } from '../../services/api';
+
 
 const Projects = () => {
   const [projects, setProjects] = useState([]);
