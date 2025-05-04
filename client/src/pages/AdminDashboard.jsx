@@ -35,7 +35,7 @@ export default function AdminDashboard() {
         <input placeholder="Title" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} className="block mb-2 border p-2 w-full" />
         <textarea placeholder="Description" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className="block mb-2 border p-2 w-full" />
         <input placeholder="GitHub Link" value={form.githubLink} onChange={(e) => setForm({ ...form, githubLink: e.target.value })} className="block mb-2 border p-2 w-full" />
-        <button className="bg-green-600 text-white px-4 py-2">Add Project</button>
+        <button className="bg-green-600 w-full text-white px-4 py-2">Add Project</button>
       </form>
 
       <ul>

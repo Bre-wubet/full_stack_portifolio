@@ -1,4 +1,8 @@
 const ProjectCard = ({ project }) => {
+  if (!project) {
+    return null;
+  }
+
   return (
     <div className="bg-white rounded-xl shadow-lg overflow-hidden transform hover:scale-[1.02] transition-transform duration-300">
       {/* Project Image */}
@@ -18,7 +22,7 @@ const ProjectCard = ({ project }) => {
 
         {/* Tech Stack */}
         <div className="flex flex-wrap gap-2 mb-4">
-          {project.techStack.map((tech, index) => (
+          {project.tags && project.tags.map((tech, index) => (
             <span
               key={index}
               className="px-3 py-1 text-sm rounded-full bg-background text-primary"
@@ -30,22 +34,26 @@ const ProjectCard = ({ project }) => {
 
         {/* Action Buttons */}
         <div className="flex gap-3">
-          <a
-            href={project.liveDemoUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex-1 text-center py-2 rounded-lg bg-primary hover:bg-accent text-white transition-colors duration-300"
-          >
-            Live Demo
-          </a>
-          <a
-            href={project.githubUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex-1 text-center py-2 rounded-lg border-2 border-primary hover:border-accent text-primary hover:text-accent transition-colors duration-300"
-          >
-            GitHub
-          </a>
+          {project.liveDemo && (
+            <a
+              href={project.liveDemo}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-1 text-center py-2 rounded-lg bg-primary hover:bg-accent text-white transition-colors duration-300"
+            >
+              Live Demo
+            </a>
+          )}
+          {project.githubLink && (
+            <a
+              href={project.githubLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-1 text-center py-2 rounded-lg border-2 border-primary hover:border-accent text-primary hover:text-accent transition-colors duration-300"
+            >
+              GitHub
+            </a>
+          )}
         </div>
       </div>
     </div>

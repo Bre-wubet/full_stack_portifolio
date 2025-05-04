@@ -1,3 +1,5 @@
+
+
 const About = () => {
   return (
     <section id="about" className="py-20 px-4 md:px-8 bg-white/50">
@@ -15,7 +17,7 @@ const About = () => {
               With expertise in both frontend and backend development, I enjoy building complete solutions that make a real difference. I'm particularly interested in educational technology and creating tools that help students learn more effectively.
             </p>
           </div>
-          <div className="space-y-6">
+          {/* <div className="space-y-6">
             <div className="bg-white p-6 rounded-xl shadow-lg">
               <h3 className="text-xl font-bold mb-4 text-primary">Technical Skills</h3>
               <div className="flex flex-wrap gap-2">
@@ -26,7 +28,7 @@ const About = () => {
                 ))}
               </div>
             </div>
-          </div>
+          </div> */}
         </div>
       </div>
     </section>

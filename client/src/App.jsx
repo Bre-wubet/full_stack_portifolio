@@ -7,7 +7,7 @@ import Hero from './components/sections/Hero';
 import Projects from './components/sections/Projects';
 import About from './components/sections/About';
 import Contact from './components/sections/Contact';
-import SkillsScroller from './components/sections/Skills';
+import SkillsBar from './components/sections/Skills';
 
 import AdminLogin from './pages/AdminLogin';
 import AdminDashboard from './pages/AdminDashboard';
@@ -18,8 +18,8 @@ const HomePage = () => {
       <Navbar />
       <main>
         <Hero />
-        <SkillsScroller />
         <Projects />
+        <SkillsBar />
         <About />
         <Contact />
       </main>
