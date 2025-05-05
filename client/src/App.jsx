@@ -7,7 +7,6 @@ import Hero from './components/sections/Hero';
 import Projects from './components/sections/Projects';
 import About from './components/sections/About';
 import Contact from './components/sections/Contact';
-import SkillsBar from './components/sections/Skills';
 
 import AdminLogin from './pages/AdminLogin';
 import AdminDashboard from './pages/AdminDashboard';
@@ -19,7 +18,6 @@ const HomePage = () => {
       <main>
         <Hero />
         <Projects />
-        <SkillsBar />
         <About />
         <Contact />
       </main>

@@ -18,10 +18,10 @@ export default function AdminLogin({ onLogin }) {
   };
 
   return (
-    <form onSubmit={handleLogin} className="max-w-sm mx-auto mt-20">
-      <input placeholder="Username" value={username} onChange={(e) => setUsername(e.target.value)} className="block mb-2 border p-2 w-full" />
-      <input placeholder="Password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="block mb-2 border p-2 w-full" />
-      <button className="bg-blue-600 text-white px-4 py-2">Login</button>
+    <form onSubmit={handleLogin} className="max-w-sm mx-auto mt-20 py-2">
+      <input placeholder="Username" value={username} onChange={(e) => setUsername(e.target.value)} className="block mb-2 border p-2 w-full rounded" />
+      <input placeholder="Password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="block mb-2 border p-2 w-full rounded" />
+      <button className="bg-blue-600 text-white px-4 py-2 w-full rounded">Login</button>
     </form>
   );
 }

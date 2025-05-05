@@ -1,34 +1,157 @@
 
 
+import { useState } from 'react';
+import { motion } from 'framer-motion';
+
 const About = () => {
+  const [activeTab, setActiveTab] = useState('journey');
+
+  const tabs = [
+    { id: 'journey', label: 'My Journey' },
+    { id: 'skills', label: 'Skills' },
+    { id: 'interests', label: 'Interests' }
+  ];
+
+  const journeyItems = [
+    {
+      year: '2023',
+      title: 'Full Stack Developer',
+      description: 'Specializing in modern web technologies and creating responsive, user-friendly applications.'
+    },
+    {
+      year: '2022',
+      title: 'Frontend Development',
+      description: 'Mastered React.js and modern frontend frameworks while building interactive web applications.'
+    },
+    {
+      year: '2021',
+      title: 'Started Coding Journey',
+      description: 'Began learning programming fundamentals and web development basics.'
+    }
+  ];
+
+  const skills = [
+    { name: 'Frontend Development', level: 90 },
+    { name: 'Backend Development', level: 85 },
+    { name: 'React.js', level: 95 },
+    { name: 'Node.js', level: 88 },
+    { name: 'Database Management', level: 82 }
+  ];
+
+  const interests = [
+    {
+      title: 'Technology Innovation',
+      description: 'Passionate about exploring new technologies and their potential to solve real-world problems.'
+    },
+    {
+      title: 'Open Source',
+      description: 'Contributing to and learning from the open-source community.'
+    },
+    {
+      title: 'Continuous Learning',
+      description: 'Always eager to learn new programming languages and frameworks.'
+    }
+  ];
+
+  const fadeInUp = {
+    initial: { opacity: 0, y: 20 },
+    animate: { opacity: 1, y: 0 },
+    transition: { duration: 0.5 }
+  };
+
   return (
-    <section id="about" className="py-20 px-4 md:px-8 bg-white/50">
-      <div className="max-w-4xl mx-auto">
-        <h2 className="text-4xl font-bold text-center mb-4">About Me</h2>
-        <p className="text-center text-text/70 mb-12">
-          Passionate about creating impactful solutions through code
-        </p>
-        <div className="grid md:grid-cols-2 gap-12 items-center">
-          <div className="space-y-6">
-            <p className="text-lg leading-relaxed">
-              I'm a full-stack developer with a strong focus on creating scalable and user-friendly applications. My journey in tech is driven by a passion for solving complex problems and helping others through technology.
-            </p>
-            <p className="text-lg leading-relaxed">
-              With expertise in both frontend and backend development, I enjoy building complete solutions that make a real difference. I'm particularly interested in educational technology and creating tools that help students learn more effectively.
-            </p>
+    <section id="about" className="py-20 px-4 md:px-8 bg-gradient-to-b from-blue-50 to-white">
+      <div className="max-w-7xl mx-auto">
+        <motion.div 
+          className="text-center mb-12"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          <h2 className="text-4xl font-bold text-gray-900 mb-4 hover:text-blue-400 transition-colors duration-300">
+            About Me
+          </h2>
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            A passionate full-stack developer dedicated to creating innovative web solutions
+          </p>
+        </motion.div>
+
+        <div className="flex justify-center mb-8">
+          <div className="flex space-x-4 bg-white rounded-lg shadow-md p-1">
+            {tabs.map(tab => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`px-6 py-2 rounded-md transition-all duration-300 ${
+                  activeTab === tab.id
+                    ? 'bg-blue-400 text-white'
+                    : 'text-gray-600 hover:text-blue-400'
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
           </div>
-          {/* <div className="space-y-6">
-            <div className="bg-white p-6 rounded-xl shadow-lg">
-              <h3 className="text-xl font-bold mb-4 text-primary">Technical Skills</h3>
-              <div className="flex flex-wrap gap-2">
-                {['React', 'Node.js', 'Python', 'MongoDB', 'SQL', 'AWS', 'Docker', 'TypeScript', 'Tailwind CSS'].map((skill, index) => (
-                  <span key={index} className="px-3 py-1 bg-background text-primary rounded-full text-sm">
-                    {skill}
-                  </span>
-                ))}
-              </div>
-            </div>
-          </div> */}
+        </div>
+
+        <div className="bg-white rounded-xl shadow-lg p-6 md:p-8">
+          {activeTab === 'journey' && (
+            <motion.div 
+              className="space-y-8"
+              {...fadeInUp}
+            >
+              {journeyItems.map((item, index) => (
+                <div key={index} className="flex items-start space-x-4">
+                  <div className="flex-shrink-0 w-24 text-blue-400 font-bold">{item.year}</div>
+                  <div>
+                    <h3 className="text-xl font-semibold text-gray-900 mb-2">{item.title}</h3>
+                    <p className="text-gray-600">{item.description}</p>
+                  </div>
+                </div>
+              ))}
+            </motion.div>
+          )}
+
+          {activeTab === 'skills' && (
+            <motion.div 
+              className="space-y-6"
+              {...fadeInUp}
+            >
+              {skills.map((skill, index) => (
+                <div key={index} className="space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-gray-700 font-medium">{skill.name}</span>
+                    <span className="text-blue-400">{skill.level}%</span>
+                  </div>
+                  <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                    <motion.div
+                      className="h-full bg-blue-400"
+                      initial={{ width: 0 }}
+                      animate={{ width: `${skill.level}%` }}
+                      transition={{ duration: 1, delay: index * 0.1 }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </motion.div>
+          )}
+
+          {activeTab === 'interests' && (
+            <motion.div 
+              className="grid md:grid-cols-2 lg:grid-cols-3 gap-6"
+              {...fadeInUp}
+            >
+              {interests.map((interest, index) => (
+                <div 
+                  key={index} 
+                  className="p-6 rounded-lg bg-blue-50 hover:bg-blue-100 transition-colors duration-300"
+                >
+                  <h3 className="text-xl font-semibold text-gray-900 mb-3">{interest.title}</h3>
+                  <p className="text-gray-600">{interest.description}</p>
+                </div>
+              ))}
+            </motion.div>
+          )}
         </div>
       </div>
     </section>

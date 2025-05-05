@@ -8,10 +8,30 @@ import authenticateAdmin from '../middleware/auth.js';
 // Create a new project (admin only)
 router.post('/', authenticateAdmin, async (req, res) => {
   try {
-    const project = new Project(req.body);
+    // Validate required fields
+    if (!req.body.title) {
+      return res.status(400).json({ message: 'Project title is required' });
+    }
+
+    // Create project with validated data
+    const projectData = {
+      title: req.body.title,
+      description: req.body.description || '',
+      imageUrl: req.body.imageUrl || '',
+      githubLink: req.body.githubLink || '',
+      liveDemo: req.body.liveDemo || '',
+      tags: req.body.tags || []
+    };
+
+    const project = new Project(projectData);
     await project.save();
     res.status(201).json(project);
   } catch (err) {
+    // Handle validation errors
+    if (err.name === 'ValidationError') {
+      const errors = Object.values(err.errors).map(error => error.message);
+      return res.status(400).json({ message: 'Validation error', errors });
+    }
     res.status(400).json({ message: err.message });
   }
 });
