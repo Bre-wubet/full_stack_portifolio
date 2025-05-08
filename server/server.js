@@ -5,6 +5,8 @@ import dotenv from 'dotenv';
 import authenticateAdmin from './middleware/auth.js';
 import mongoose from 'mongoose';
 import projectRoutes from './routes/projects.js';
+import contactRoute from './routes/contact.js';
+
 
 dotenv.config();
 const app = express();
@@ -25,6 +27,7 @@ mongoose.connect(process.env.MONGODB_URI, {
 
   // route to fetch all projects
 
+  app.use('/contact', contactRoute);
   app.use('/projects', projectRoutes);
 
 // Public route

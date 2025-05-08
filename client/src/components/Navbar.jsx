@@ -21,11 +21,11 @@ const Navbar = () => {
   };
 
   return (
-    <nav className={`fixed w-full z-50 transition-all duration-300 bg-blue-400 backdrop-blur-sm shadow-lg'`}>
+    <nav className={`fixed w-full z-50 transition-all duration-300 bg-gradient-to-br from-blue-200 via-blue-100 to-blue-50 backdrop-blur-sm shadow-xl`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <div className="flex-shrink-0">
-            <span className="text-2xl font-bold text-primary cursor-pointer" onClick={() => scrollToSection('hero')}>BW</span>
+            <span className="text-2xl font-bold text-primary cursor-pointer" onClick={() => scrollToSection('hero')}>Brie</span>
           </div>
           
           {/* Desktop Menu */}

@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { useForm } from 'react-hook-form';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import API from '../../api';
 
 const Contact = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -11,20 +12,19 @@ const Contact = () => {
   const onSubmit = async (data) => {
     setIsSubmitting(true);
     try {
-      // Here you would typically make an API call to your backend
-      // For now, we'll simulate an API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      toast.success('Message sent successfully!');
+      const res = await API.post('/contact', data);
+      toast.success(res.data.message || 'Message sent successfully!');
       reset();
     } catch (error) {
-      toast.error('Failed to send message. Please try again.');
+      toast.error(error.response?.data?.message || 'Failed to send message. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
   };
+  
 
   return (
-    <section id="contact" className="py-20 px-4 md:px-8 bg-gradient-to-br from-primary/5 to-accent/5">
+    <section id="contact" className="py-20 px-4 md:px-8 bg-gradient-to-b from-gray-200 to-white">
       <div className="max-w-4xl mx-auto">
         <motion.div
           className="text-center mb-12"
@@ -32,8 +32,8 @@ const Contact = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <h2 className="text-4xl font-bold text-text mb-4">Get in Touch</h2>
-          <p className="text-text/70">
+          <h2 className="text-4xl font-bold text-text mb-4">Contact Me</h2>
+          <p className="text-black text-xl">
             Have a question or want to work together?
           </p>
         </motion.div>
@@ -102,8 +102,8 @@ const Contact = () => {
             <motion.button
               type="submit"
               disabled={isSubmitting}
-              className={`w-full bg-primary text-white font-medium py-3 rounded-lg
-                ${isSubmitting ? 'opacity-70 cursor-not-allowed' : 'hover:bg-accent'}
+              className={`w-full bg-blue-400 text-white font-medium py-3 rounded-lg
+                ${isSubmitting ? 'opacity-70 cursor-not-allowed' : 'hover:bg-blue-600'}
                 transition-colors duration-300`}
               whileHover={{ scale: isSubmitting ? 1 : 1.02 }}
               whileTap={{ scale: isSubmitting ? 1 : 0.98 }}
