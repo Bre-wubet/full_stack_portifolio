@@ -16,53 +16,39 @@ const validateContactInput = (req, res, next) => {
 
 
 router.post('/', validateContactInput, async (req, res) => {
-    const { name, email, message } = req.body;
+  const { name, email, message } = req.body;
 
-    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-      console.error('Email configuration is missing');
-      return res.status(500).json({ success: false, message: 'Server configuration error' });
-    }
+  // Create transporter with secure SMTP settings
+  const transporter = nodemailer.createTransport({
+    host: 'smtp.gmail.com',
+    port: 465,
+    secure: true,
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS,
+    },
+  });
 
-    // Create a transporter object using SMTP transport
-    const transporter = nodemailer.createTransport({
-      host: 'smtp.gmail.com',
-      port: 465,
-      secure: true, // use SSL
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS, // use app-specific password
-      },
-      tls: {
-        rejectUnauthorized: false
-      }
-    });
+  // Mail options
+  const mailOptions = {
+    from: `"${name}" <${process.env.EMAIL_USER}>`,
+    to: process.env.EMAIL_TO,
+    subject: `Portfolio Contact from ${name}`,
+    html: `<p><strong>Name:</strong> ${name}</p>
+           <p><strong>Email:</strong> ${email}</p>
+           <p><strong>Message:</strong></p>
+           <p>${message}</p>`,
+  };
 
-    // mail options
-    const mailOptions = {
-        from: `"${name}" <${process.env.EMAIL_USER}>`, // use authenticated email as sender
-        replyTo: email, // set reply-to as the contact form email
-        to: process.env.EMAIL_TO,
-        subject: `Portfolio Contact Form: ${name}`,
-        html: `<p><strong>Name:</strong> ${name}</p>
-               <p><strong>Email:</strong> ${email}</p>
-               <p><strong>Message:</strong> ${message}</p>`,
-    };
-
-    try {
-        // Verify transporter configuration
-        await transporter.verify();
-        
-        // Send email
-        const info = await transporter.sendMail(mailOptions);
-        console.log('Message sent: %s', info.messageId);
-        res.status(200).json({ success: true, message: 'Email sent successfully!' });
-    } catch (error) {
-        console.error('Error sending email:', error);
-        const errorMessage = process.env.NODE_ENV === 'development' 
-            ? error.message 
-            : 'Failed to send email. Please try again later.';
-        res.status(500).json({ success: false, message: errorMessage });
-    }
+  try {
+    await transporter.sendMail(mailOptions);
+    res.status(200).json({ success: true, message: 'Message sent successfully!' });
+  } catch (error) {
+    console.error('Email error:', error);
+    const errorMessage = process.env.NODE_ENV === 'development' 
+      ? `Failed to send message: ${error.message}` 
+      : 'Failed to send message. Please try again later.';
+    res.status(500).json({ success: false, message: errorMessage });
+  }
 });
-
 export default router;

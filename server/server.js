@@ -25,9 +25,9 @@ mongoose.connect(process.env.MONGODB_URI, {
   .catch(err => console.error('MongoDB connection error:', err));
 
 
-  // route to fetch all projects
-
   app.use('/contact', contactRoute);
+
+  // route to fetch all projects
   app.use('/projects', projectRoutes);
 
 // Public route
