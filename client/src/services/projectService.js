@@ -1,6 +1,20 @@
 import API from '../api';
 
 const projectService = {
+  uploadImage: async (formData) => {
+    try {
+      const response = await API.post('/projects/upload', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      return response.data.imageUrl;
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      throw error;
+    }
+  },
+
   getAllProjects: async () => {
     try {
       const response = await API.get('/projects');

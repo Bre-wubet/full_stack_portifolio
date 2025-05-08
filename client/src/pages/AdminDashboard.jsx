@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import projectService from '../services/projectService';
-import { FaGithub, FaExternalLinkAlt, FaTimes } from 'react-icons/fa';
+import { FaGithub, FaExternalLinkAlt, FaTimes, FaCloudUploadAlt } from 'react-icons/fa';
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
@@ -32,11 +32,38 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      setError('Please upload an image file');
+      return;
+    }
+
+    try {
+      const formData = new FormData();
+      formData.append('image', file);
+      const imageUrl = await projectService.uploadImage(formData);
+      setForm({ ...form, imageUrl });
+      setError('');
+    } catch (err) {
+      setError('Failed to upload image');
+    }
+  };
+
   const handleAddProject = async (e) => {
     e.preventDefault();
     try {
       await projectService.addProject(form);
-      setForm({ title: '', description: '', githubLink: '' });
+      setForm({
+        title: '',
+        description: '',
+        imageUrl: '',
+        githubLink: '',
+        liveDemo: '',
+        tags: []
+      });
       setError('');
       fetchProjects();
     } catch (err) {
@@ -94,13 +121,33 @@ export default function AdminDashboard() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Image URL</label>
-          <input
-            placeholder="Image URL"
-            value={form.imageUrl}
-            onChange={(e) => setForm({ ...form, imageUrl: e.target.value })}
-            className="block w-full border-blue-200 border-2 rounded p-2"
-          />
+          <label className="block text-sm font-medium text-gray-700 mb-1">Project Image</label>
+          <div className="flex items-center space-x-2">
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleImageUpload}
+              className="hidden"
+              id="image-upload"
+            />
+            <label
+              htmlFor="image-upload"
+              className="flex items-center justify-center px-4 py-2 border border-blue-200 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 cursor-pointer"
+            >
+              <FaCloudUploadAlt className="mr-2" />
+              Upload Image
+            </label>
+            {form.imageUrl && (
+              <div className="flex-1 text-sm text-gray-500 truncate">
+                Image uploaded successfully
+              </div>
+            )}
+          </div>
+          {form.imageUrl && (
+            <div className="mt-2">
+              <img src={form.imageUrl} alt="Preview" className="w-full h-48 object-cover rounded-lg" />
+            </div>
+          )}
         </div>
 
         <div>
