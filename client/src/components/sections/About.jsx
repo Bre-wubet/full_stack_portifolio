@@ -1,7 +1,8 @@
 
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import skillService from '../../services/skillService';
 
 const About = () => {
   const [activeTab, setActiveTab] = useState('journey');
@@ -30,13 +31,26 @@ const About = () => {
     }
   ];
 
-  const skills = [
-    { name: 'Frontend Development', level: 90 },
-    { name: 'Backend Development', level: 85 },
-    { name: 'React.js', level: 95 },
-    { name: 'Node.js', level: 88 },
-    { name: 'Database Management', level: 82 }
-  ];
+  const [skills, setSkills] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchSkills = async () => {
+      try {
+        const data = await skillService.getAllSkills();
+        setSkills(data);
+        setError(null);
+      } catch (err) {
+        setError('Failed to load skills');
+        console.error('Error fetching skills:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchSkills();
+  }, []);
 
   const interests = [
     {
@@ -117,7 +131,13 @@ const About = () => {
               className="space-y-6"
               {...fadeInUp}
             >
-              {skills.map((skill, index) => (
+              {isLoading ? (
+                <div className="text-center py-4">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-400 mx-auto"></div>
+                </div>
+              ) : error ? (
+                <div className="text-red-500 text-center py-4">{error}</div>
+              ) : skills.map((skill, index) => (
                 <div key={index} className="space-y-2">
                   <div className="flex justify-between">
                     <span className="text-gray-700 font-medium">{skill.name}</span>

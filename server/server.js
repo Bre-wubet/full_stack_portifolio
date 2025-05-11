@@ -6,6 +6,8 @@ import authenticateAdmin from './middleware/auth.js';
 import mongoose from 'mongoose';
 import projectRoutes from './routes/projects.js';
 import contactRoute from './routes/contact.js';
+import skillRoutes from './routes/skills.js';
+import journeyRoutes from './routes/journeys.js';
 
 
 dotenv.config();
@@ -27,8 +29,10 @@ mongoose.connect(process.env.MONGODB_URI, {
 
   app.use('/contact', contactRoute);
 
-  // route to fetch all projects
+  // API routes
   app.use('/projects', projectRoutes);
+  app.use('/skills', skillRoutes);
+  app.use('/journeys', journeyRoutes);
 
 // Public route
 app.get('/', (req, res) => {
