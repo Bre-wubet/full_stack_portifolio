@@ -1,23 +1,15 @@
 import { useState } from 'react';
 import skillService from '../../services/skillService';
+import { FaEdit, FaTrash } from 'react-icons/fa';
 
-export default function AdminSkill() {
-  const [skills, setSkills] = useState([]);
+export default function AdminSkill({ skills, onUpdate }) {
   const [error, setError] = useState('');
   const [skillForm, setSkillForm] = useState({
     name: '',
     level: 0,
   });
-
-  const fetchSkills = async () => {
-    try {
-      const skills = await skillService.getAllSkills();
-      setSkills(skills);
-      setError('');
-    } catch (err) {
-      handleError(err);
-    }
-  };
+  const [isEditing, setIsEditing] = useState(false);
+  const [editingId, setEditingId] = useState(null);
 
   const handleError = (err) => {
     if (err.response?.status === 401) {
@@ -30,23 +22,38 @@ export default function AdminSkill() {
   const handleAddSkill = async (e) => {
     e.preventDefault();
     try {
-      await skillService.addSkill(skillForm);
+      if (isEditing) {
+        await skillService.updateSkill(editingId, skillForm);
+      } else {
+        await skillService.addSkill(skillForm);
+      }
       setSkillForm({
         name: '',
         level: 0,
       });
+      setIsEditing(false);
+      setEditingId(null);
       setError('');
-      fetchSkills();
+      onUpdate();
     } catch (err) {
       handleError(err);
     }
+  };
+
+  const handleEditSkill = (skill) => {
+    setSkillForm({
+      name: skill.name,
+      level: skill.level
+    });
+    setIsEditing(true);
+    setEditingId(skill._id);
   };
 
   const handleDeleteSkill = async (id) => {
     try {
       await skillService.deleteSkill(id);
       setError('');
-      fetchSkills();
+      onUpdate();
     } catch (err) {
       handleError(err);
     }
@@ -54,38 +61,7 @@ export default function AdminSkill() {
 
   return (
     <div className='m-4'>
-      <form onSubmit={handleAddSkill} className="mb-8 space-y-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Name *</label>
-          <input
-            required
-            placeholder="Skill Name"
-            value={skillForm.name}
-            onChange={(e) => setSkillForm({ ...skillForm, name: e.target.value })}
-            className="block w-full border-blue-50 border-2 rounded p-2"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Proficiency *</label>
-          <input
-            required
-            type="number"
-            min="0"
-            max="100"
-            value={skillForm.level}
-            onChange={(e) => setSkillForm({ ...skillForm, level: parseInt(e.target.value) })}
-            className="block w-full border-blue-50 border-2 rounded p-2"
-          />
-        </div>
-        <button
-          type="submit"
-          className="w-full bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-        >
-          Add Skill
-        </button>
-      </form>
-
+      <h3 className='font-bold items-center px-6 bg-slate-100 rounded py-4'>My Skills</h3>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {skills.map((skill) => (
           <div key={skill._id} className="border rounded-lg p-4">
@@ -103,15 +79,73 @@ export default function AdminSkill() {
               </div>
               <p className="text-sm text-gray-600 mt-1">{skill.level}% Proficiency</p>
             </div>
-            <button
-              onClick={() => handleDeleteSkill(skill._id)}
-              className="text-red-500 hover:text-red-600"
-            >
-              Delete
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={() => handleEditSkill(skill)}
+                className="text-blue-500 hover:text-blue-600"
+              >
+                <FaEdit />
+              </button>
+              <button
+                onClick={() => handleDeleteSkill(skill._id)}
+                className="text-red-500 hover:text-red-600"
+              >
+                <FaTrash />
+              </button>
+            </div>
           </div>
         ))}
       </div>
+
+      <form onSubmit={handleAddSkill} className="mb-8 space-y-4 py-10">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Name </label>
+          <input
+            required
+            placeholder="Skill Name"
+            value={skillForm.name}
+            onChange={(e) => setSkillForm({ ...skillForm, name: e.target.value })}
+            className="block w-full border-blue-50 border-2 rounded p-2"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Proficiency </label>
+          <input
+            required
+            type="number"
+            min="0"
+            max="100"
+            value={skillForm.level}
+            onChange={(e) => setSkillForm({ ...skillForm, level: parseInt(e.target.value) })}
+            className="block w-full border-blue-50 border-2 rounded p-2"
+          />
+        </div>
+        <button
+          type="submit"
+          className="w-full bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+        >
+          {isEditing ? 'Update Skill' : 'Add Skill'}
+        </button>
+        {isEditing && (
+          <button
+            type="button"
+            onClick={() => {
+              setSkillForm({
+                name: '',
+                level: 0,
+              });
+              setIsEditing(false);
+              setEditingId(null);
+            }}
+            className="w-full mt-2 bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-600"
+          >
+            Cancel Edit
+          </button>
+        )}
+      </form>
+
+      
     </div>
   );
 }

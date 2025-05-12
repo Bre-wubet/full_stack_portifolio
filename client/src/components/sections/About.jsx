@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import skillService from '../../services/skillService';
+import journeyService from '../../services/journeyService';
 
 const About = () => {
   const [activeTab, setActiveTab] = useState('journey');
@@ -13,23 +14,19 @@ const About = () => {
     { id: 'interests', label: 'Interests' }
   ];
 
-  const journeyItems = [
-    {
-      year: '2023',
-      title: 'Full Stack Developer',
-      description: 'Specializing in modern web technologies and creating responsive, user-friendly applications.'
-    },
-    {
-      year: '2022',
-      title: 'Frontend Development',
-      description: 'Mastered React.js and modern frontend frameworks while building interactive web applications.'
-    },
-    {
-      year: '2021',
-      title: 'Started Coding Journey',
-      description: 'Began learning programming fundamentals and web development basics.'
-    }
-  ];
+  const [journeyItems, setJourneyItems] = useState([]);
+
+  useEffect(() => {
+    const fetchJourneys = async () => {
+      try {
+        const data = await journeyService.getAllJourneys();
+        setJourneyItems(data);
+      } catch (error) {
+        console.error('Error fetching journeys:', error);
+      }
+    };
+    fetchJourneys();
+  }, []);
 
   const [skills, setSkills] = useState([]);
   const [isLoading, setIsLoading] = useState(true);

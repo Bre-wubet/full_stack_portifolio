@@ -1,9 +1,8 @@
 import { useState } from 'react';
-import { FaGithub, FaExternalLinkAlt, FaTimes, FaCloudUploadAlt } from 'react-icons/fa';
+import { FaGithub, FaExternalLinkAlt, FaTimes, FaCloudUploadAlt, FaEdit } from 'react-icons/fa';
 import projectService from '../../services/projectService';
 
-export default function AdminProject() {
-  const [projects, setProjects] = useState([]);
+export default function AdminProject({ projects, onUpdate }) {
   const [error, setError] = useState('');
   const [projectForm, setProjectForm] = useState({
     title: '',
@@ -14,16 +13,8 @@ export default function AdminProject() {
     tags: []
   });
   const [currentTag, setCurrentTag] = useState('');
-
-  const fetchProjects = async () => {
-    try {
-      const projects = await projectService.getAllProjects();
-      setProjects(projects);
-      setError('');
-    } catch (err) {
-      handleError(err);
-    }
-  };
+  const [isEditing, setIsEditing] = useState(false);
+  const [editingId, setEditingId] = useState(null);
 
   const handleError = (err) => {
     if (err.response?.status === 401) {
@@ -56,7 +47,11 @@ export default function AdminProject() {
   const handleAddProject = async (e) => {
     e.preventDefault();
     try {
-      await projectService.addProject(projectForm);
+      if (isEditing) {
+        await projectService.updateProject(editingId, projectForm);
+      } else {
+        await projectService.addProject(projectForm);
+      }
       setProjectForm({
         title: '',
         description: '',
@@ -65,18 +60,33 @@ export default function AdminProject() {
         liveDemo: '',
         tags: []
       });
+      setIsEditing(false);
+      setEditingId(null);
       setError('');
-      fetchProjects();
+      onUpdate();
     } catch (err) {
       handleError(err);
     }
+  };
+
+  const handleEditProject = (project) => {
+    setProjectForm({
+      title: project.title,
+      description: project.description,
+      imageUrl: project.imageUrl,
+      githubLink: project.githubLink,
+      liveDemo: project.liveDemo,
+      tags: project.tags
+    });
+    setIsEditing(true);
+    setEditingId(project._id);
   };
 
   const handleDeleteProject = async (id) => {
     try {
       await projectService.deleteProject(id);
       setError('');
-      fetchProjects();
+      onUpdate();
     } catch (err) {
       handleError(err);
     }
@@ -84,9 +94,72 @@ export default function AdminProject() {
 
   return (
     <div className='m-4'>
+      <h3 className='font-bold items-center py-4 px-6 bg-slate-100 rounded'>My Projects</h3>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {projects.map((project) => (
+          <div key={project._id} className="border rounded-lg p-4">
+            <img
+              src={project.imageUrl}
+              alt={project.title}
+              className="w-full h-48 object-cover rounded-lg mb-4"
+            />
+            <h3 className="font-bold text-lg mb-2">{project.title}</h3>
+            <p className="text-gray-600 mb-4">{project.description}</p>
+            <div className="flex gap-2 mb-4">
+              {project.tags.map((tag, index) => (
+                <span
+                  key={index}
+                  className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-sm"
+                >
+                  {tag}
+                </span>
+              ))}
+            </div>
+            <div className="flex justify-between items-center">
+              <div className="flex gap-2">
+                {project.githubLink && (
+                  <a
+                    href={project.githubLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-gray-600 hover:text-gray-800"
+                  >
+                    <FaGithub size={20} />
+                  </a>
+                )}
+                {project.liveDemo && (
+                  <a
+                    href={project.liveDemo}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-gray-600 hover:text-gray-800"
+                  >
+                    <FaExternalLinkAlt size={20} />
+                  </a>
+                )}
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => handleEditProject(project)}
+                  className="text-blue-500 hover:text-blue-600"
+                >
+                  <FaEdit />
+                </button>
+                <button
+                  onClick={() => handleDeleteProject(project._id)}
+                  className="text-red-500 hover:text-red-600"
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
       <form onSubmit={handleAddProject} className="mb-8 space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Title *</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Title </label>
           <input
             required
             placeholder="Project Title"
@@ -204,63 +277,31 @@ export default function AdminProject() {
           type="submit"
           className="w-full bg-blue-400 text-white px-4 py-2 rounded hover:bg-blue-600"
         >
-          Add Project
+          {isEditing ? 'Update Project' : 'Add Project'}
         </button>
+        {isEditing && (
+          <button
+            type="button"
+            onClick={() => {
+              setProjectForm({
+                title: '',
+                description: '',
+                imageUrl: '',
+                githubLink: '',
+                liveDemo: '',
+                tags: []
+              });
+              setIsEditing(false);
+              setEditingId(null);
+            }}
+            className="w-full mt-2 bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-600"
+          >
+            Cancel Edit
+          </button>
+        )}
       </form>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {projects.map((project) => (
-          <div key={project._id} className="border rounded-lg p-4">
-            <img
-              src={project.imageUrl}
-              alt={project.title}
-              className="w-full h-48 object-cover rounded-lg mb-4"
-            />
-            <h3 className="font-bold text-lg mb-2">{project.title}</h3>
-            <p className="text-gray-600 mb-4">{project.description}</p>
-            <div className="flex gap-2 mb-4">
-              {project.tags.map((tag, index) => (
-                <span
-                  key={index}
-                  className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-sm"
-                >
-                  {tag}
-                </span>
-              ))}
-            </div>
-            <div className="flex justify-between items-center">
-              <div className="flex gap-2">
-                {project.githubLink && (
-                  <a
-                    href={project.githubLink}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-gray-600 hover:text-gray-800"
-                  >
-                    <FaGithub size={20} />
-                  </a>
-                )}
-                {project.liveDemo && (
-                  <a
-                    href={project.liveDemo}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-gray-600 hover:text-gray-800"
-                  >
-                    <FaExternalLinkAlt size={20} />
-                  </a>
-                )}
-              </div>
-              <button
-                onClick={() => handleDeleteProject(project._id)}
-                className="text-red-500 hover:text-red-600"
-              >
-                Delete
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
+      
     </div>
   );
 }

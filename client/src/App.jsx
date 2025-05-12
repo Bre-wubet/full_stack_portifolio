@@ -5,6 +5,7 @@ import Hero from './components/sections/Hero';
 import Projects from './components/sections/Projects';
 import About from './components/sections/About';
 import Contact from './components/sections/Contact';
+import Footer from './components/sections/Footer';
 
 import AdminLogin from './components/admin/AdminLogin';
 import AdminDashboard from './components/admin/AdminDashboard';
@@ -21,6 +22,7 @@ const HomePage = () => {
         <About />
         <Contact />
       </main>
+      <Footer />
     </div>
   );
 };
