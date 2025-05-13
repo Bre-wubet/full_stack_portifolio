@@ -18,6 +18,9 @@ app.use(cors({
   credentials: true,
 }));
 
+// Serve static files from public directory
+app.use('/uploads', express.static('public/uploads'));
+
 // MongoDB connection
 
 mongoose.connect(process.env.MONGODB_URI, { 
@@ -51,6 +54,9 @@ app.post('/admin/login', (req, res) => {
 
 // Protected admin route
 app.get('/admin/dashboard', authenticateAdmin, (req, res) => {
+  if (req.user.role !== 'admin') {
+    return res.status(403).json({ message: 'Access denied' });
+  }
   res.send('Welcome to the admin dashboard.');
 });
 

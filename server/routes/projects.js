@@ -3,19 +3,34 @@ import express from 'express';
 const router = express.Router();
 import Project from '../models/Project.js';
 import authenticateAdmin from '../middleware/auth.js';
-import cloudinary from 'cloudinary';
 import multer from 'multer';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import fs from 'fs';
 
-// Configure Cloudinary
-cloudinary.v2.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET
-});
+// Get current directory
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Configure multer for handling file uploads
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    const uploadPath = path.join(__dirname, '..', 'public', 'uploads');
+    // Create directory if it doesn't exist
+    if (!fs.existsSync(uploadPath)) {
+      fs.mkdirSync(uploadPath, { recursive: true });
+    }
+    cb(null, uploadPath);
+  },
+  filename: function (req, file, cb) {
+    // Create unique filename
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
 const upload = multer({
-  storage: multer.memoryStorage(),
+  storage: storage,
   limits: {
     fileSize: 5 * 1024 * 1024, // 5MB limit
   },
@@ -35,20 +50,18 @@ router.post('/upload', authenticateAdmin, upload.single('image'), async (req, re
       return res.status(400).json({ message: 'No image file provided' });
     }
 
-    // Convert buffer to base64
-    const b64 = Buffer.from(req.file.buffer).toString('base64');
-    const dataURI = `data:${req.file.mimetype};base64,${b64}`;
-
-    // Upload to Cloudinary
-    const result = await cloudinary.v2.uploader.upload(dataURI, {
-      folder: 'portfolio_projects',
-      resource_type: 'auto',
-    });
-
-    res.json({ imageUrl: result.secure_url });
+    // File has been saved by multer, construct the URL
+    const imageUrl = `/uploads/${path.basename(req.file.path)}`;
+    res.json({ imageUrl });
   } catch (error) {
-    console.error('Error uploading image:', error);
-    res.status(500).json({ message: 'Error uploading image' });
+    console.error('Error in image upload route:', {
+      message: error.message,
+      stack: error.stack
+    });
+    res.status(500).json({ 
+      message: 'Error uploading image',
+      details: error.message
+    });
   }
 });
 

@@ -10,7 +10,7 @@ const Hero = () => {
       <div className="mx-auto grid max-w-[1200px] grid-cols-1 items-center gap-6 sm:gap-8 px-4 sm:px-6 py-6 sm:py-8 md:grid-cols-2 lg:px-8 relative z-10">
         <div className="space-y-5 sm:space-y-6">
           <h1 className="text-3xl sm:text-4xl font-bold text-gray-950 md:text-5xl lg:text-6xl pt-10">Hi - I'm Brhina Wubet</h1>
-          <h2 className="text-lg sm:text-xl text-gray-700 md:text-2xl">
+          <h2 className="text-lg sm:text-xl text-gray-700 md:text-2xl font-bold">
             Empowering Communities Through Smart Code and Purposeful Innovation
           </h2>
           <h1 className='text-2xl sm:text-3xl font-bold'>Full stack Developer</h1>

@@ -34,13 +34,11 @@ export default function AdminProject({ projects, onUpdate }) {
     }
 
     try {
-      const formData = new FormData();
-      formData.append('image', file);
-      const imageUrl = await projectService.uploadImage(formData);
+      const imageUrl = await projectService.uploadImage(file);
       setProjectForm({ ...projectForm, imageUrl });
       setError('');
     } catch (err) {
-      setError('Failed to upload image');
+      handleError(err);
     }
   };
 
