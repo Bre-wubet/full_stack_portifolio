@@ -2,8 +2,8 @@
 import axios from 'axios';
 
 const API = axios.create({
-  baseURL: 'http://localhost:5000',
-  withCredentials: true, // or your deployed backend URL
+  baseURL: '/api',
+  withCredentials: true,
 });
 
 // Add a request interceptor with proper error handling

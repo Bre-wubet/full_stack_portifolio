@@ -23,15 +23,17 @@ const projectService = {
       const response = await API.post('/projects/upload', formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
-          // Authorization header is automatically added by API interceptor
         },
       });
       
-      if (!response.data.imageUrl) {
-        throw new Error('No image URL received from server');
+      if (!response.data.imageUrl || !response.data.publicId) {
+        throw new Error('No image data received from server');
       }
       
-      return response.data.imageUrl;
+      return {
+        imageUrl: response.data.imageUrl,
+        publicId: response.data.publicId
+      };
     } catch (error) {
       console.error('Error uploading image:', error);
       if (error.response?.status === 401) {
@@ -57,12 +59,33 @@ const projectService = {
 
   addProject: async (projectData) => {
     try {
-      const response = await API.post('/projects', projectData);
+      const response = await API.post('/projects', {
+        ...projectData,
+        imageUrl: projectData.imageUrl || '',
+        publicId: projectData.publicId || ''
+      });
       return response.data;
     } catch (error) {
       console.error('Error adding project:', error);
       if (error.response?.status === 401) {
         throw new Error('Please login as admin to add projects');
+      }
+      throw error;
+    }
+  },
+
+  updateProject: async (id, projectData) => {
+    try {
+      const response = await API.put(`/projects/${id}`, {
+        ...projectData,
+        imageUrl: projectData.imageUrl || '',
+        publicId: projectData.publicId || ''
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error updating project:', error);
+      if (error.response?.status === 401) {
+        throw new Error('Please login as admin to update projects');
       }
       throw error;
     }

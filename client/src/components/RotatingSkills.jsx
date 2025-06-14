@@ -4,16 +4,16 @@ const skills = [
   { name: 'React', icon: 'fab fa-react' },
   { name: 'Node.js', icon: 'fab fa-node-js' },
   { name: 'JavaScript', icon: 'fab fa-js' },
-  { name: 'HTML5', icon: 'fab fa-html5' },
-  { name: 'CSS3', icon: 'fab fa-css3-alt' },
   { name: 'Python', icon: 'fab fa-python' },
   { name: 'Git', icon: 'fab fa-git-alt' },
   { name: 'Database', icon: 'fas fa-database' },
   // Duplicate skills for continuous scrolling effect
-  { name: 'React', icon: 'fab fa-react' },
   { name: 'Node.js', icon: 'fab fa-node-js' },
   { name: 'JavaScript', icon: 'fab fa-js' },
-  { name: 'HTML5', icon: 'fab fa-html5' }
+  { name: 'Tailwind', icon: 'fab fa-css3-alt' },
+  { name: 'Material UI', icon: 'fab fa-css3-alt' },
+  { name: 'Express', icon: 'fab fa-css3-alt' },
+  { name: 'MongoDB', icon: 'fab fa-css3-alt' },
 ];
 
 const RotatingSkills = () => {

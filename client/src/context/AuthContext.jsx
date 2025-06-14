@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react';
+import API from '../api';
 
 const AuthContext = createContext(null);
 
@@ -22,20 +23,8 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (username, password) => {
     try {
-      const response = await fetch('http://localhost:5000/admin/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ username, password }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Invalid credentials');
-      }
-
-      const data = await response.json();
-      localStorage.setItem('adminToken', data.token);
+      const response = await API.post('/admin/login', { username, password });
+      localStorage.setItem('adminToken', response.data.token);
       setIsAuthenticated(true);
       return true;
     } catch (error) {
