@@ -8,9 +8,7 @@ export default defineConfig({
     port: 5173,
     proxy: {
       '/api': {
-        target: process.env.NODE_ENV === 'production' 
-          ? process.env.VITE_API_URL || 'https://brwubet.onrender.com'
-          : 'https://brwubet.onrender.com',
+        target: 'http://localhost:5000',
         changeOrigin: true,
         secure: false,
         rewrite: (path) => path.replace(/^\/api/, '/api')
@@ -26,6 +24,17 @@ export default defineConfig({
         drop_console: true,
         drop_debugger: true
       }
+    },
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom', 'react-router-dom'],
+          ui: ['@headlessui/react', '@heroicons/react']
+        }
+      }
     }
+  },
+  define: {
+    'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV)
   }
 })
