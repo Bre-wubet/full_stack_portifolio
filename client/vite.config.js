@@ -24,17 +24,11 @@ export default defineConfig({
         drop_console: true,
         drop_debugger: true
       }
-    },
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          vendor: ['react', 'react-dom', 'react-router-dom'],
-          ui: ['@headlessui/react', '@heroicons/react']
-        }
-      }
     }
   },
   define: {
     'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV)
-  }
+  },
+  // Ensure proper handling of environment variables
+  envPrefix: ['VITE_', 'NODE_ENV']
 })

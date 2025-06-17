@@ -35,14 +35,20 @@ const app = express();
 
 // CORS configuration
 const allowedOrigins = process.env.NODE_ENV === 'production' 
-  ? [process.env.CLIENT_URL] // Add your production client URL
+  ? [process.env.CLIENT_URL, 'https://briewubet.onrender.com'] // Add your production URLs
   : ['http://localhost:5173'];
 
 app.use(cors({
   origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes(origin)) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) {
+      return callback(null, true);
+    }
+    
+    if (allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
+      console.warn(`Origin ${origin} not allowed by CORS`);
       callback(new Error('Not allowed by CORS'));
     }
   },
