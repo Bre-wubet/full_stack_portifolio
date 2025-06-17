@@ -3,10 +3,16 @@ services:
     name: portfolio-fullstack
     env: node
     buildCommand: |
+      echo "Installing server dependencies..."
       npm install
-      cd client && npm install && npm run build:prod
+      echo "Installing client dependencies..."
+      cd client && npm install
+      echo "Building client..."
+      npm run build:prod
+      echo "Moving back to root directory..."
       cd ..
-    startCommand: npm run start
+      echo "Build completed successfully!"
+    startCommand: NODE_ENV=production node server/server.js
     envVars:
       - key: NODE_ENV
         value: production
@@ -19,4 +25,6 @@ services:
       - key: ADMIN_PASSWORD
         sync: false
       - key: CLIENT_URL
-        value: https://portfolio-fullstack.onrender.com 
+        value: https://portfolio-fullstack.onrender.com
+      - key: PORT
+        value: 10000 
