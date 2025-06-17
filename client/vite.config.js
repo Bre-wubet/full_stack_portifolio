@@ -9,8 +9,8 @@ export default defineConfig({
     proxy: {
       '/api': {
         target: process.env.NODE_ENV === 'production' 
-          ? process.env.VITE_API_URL || 'http://localhost:5000'
-          : 'http://localhost:5000',
+          ? process.env.VITE_API_URL || 'https://brwubet.onrender.com'
+          : 'https://brwubet.onrender.com',
         changeOrigin: true,
         secure: false,
         rewrite: (path) => path.replace(/^\/api/, '/api')
