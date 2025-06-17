@@ -8,8 +8,8 @@
     "build": "vite build",
     "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
-    "clean": "rm -rf dist",
-    "build:prod": "npm run clean && vite build"
+    "clean": "rimraf dist",
+    "build:prod": "npm run clean && vite build && ls -la dist"
   },
   "dependencies": {
     "axios": "^1.6.2",
@@ -31,6 +31,7 @@
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.4.5",
     "postcss": "^8.4.32",
+    "rimraf": "^5.0.5",
     "tailwindcss": "^3.4.0",
     "terser": "^5.43.0",
     "vite": "^5.0.8"

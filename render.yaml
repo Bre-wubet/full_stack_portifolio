@@ -6,9 +6,21 @@ services:
       echo "Installing server dependencies..."
       npm install
       echo "Installing client dependencies..."
-      cd client && npm install
+      cd client
+      npm install
+      echo "Cleaning previous build..."
+      npm run clean
       echo "Building client..."
-      npm run build:prod
+      npm run build
+      echo "Verifying build..."
+      ls -la dist
+      echo "Checking index.html..."
+      if [ -f dist/index.html ]; then
+        echo "index.html found"
+      else
+        echo "index.html not found!"
+        exit 1
+      fi
       echo "Moving back to root directory..."
       cd ..
       echo "Build completed successfully!"
@@ -25,6 +37,6 @@ services:
       - key: ADMIN_PASSWORD
         sync: false
       - key: CLIENT_URL
-        value: https://portfolio-fullstack.onrender.com
+        value: https://briewubet.onrender.com
       - key: PORT
         value: 10000 
