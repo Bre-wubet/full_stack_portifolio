@@ -3,41 +3,40 @@ import mongoose from 'mongoose';
 const projectSchema = new mongoose.Schema({
   title: {
     type: String,
-    required: true,
+    required: [true, 'Title is required'],
     trim: true
   },
   description: {
     type: String,
-    required: true
+    required: [true, 'Description is required'],
+    trim: true
   },
   imageUrl: {
     type: String,
-    required: true,
+    required: [true, 'Image URL is required']
   },
   publicId: {
     type: String,
-    required: true,
+    required: [true, 'Public ID is required']
   },
-  githubLink: {
-    type: String,
-    trim: true,
-  },
-  liveDemo: {
-    type: String,
-    trim: true
-  },
-  tags: [{
+  technologies: [{
     type: String,
     trim: true
   }],
-  createdAt: {
-    type: Date,
-    default: Date.now
+  githubUrl: {
+    type: String,
+    trim: true
   },
-  updatedAt: {
-    type: Date,
-    default: Date.now
+  liveUrl: {
+    type: String,
+    trim: true
+  },
+  featured: {
+    type: Boolean,
+    default: false
   }
+}, {
+  timestamps: true
 });
 
 // Update the updatedAt timestamp before saving

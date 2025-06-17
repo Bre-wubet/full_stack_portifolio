@@ -6,7 +6,7 @@ import skillService from '../../services/skillService';
 import journeyService from '../../services/journeyService';
 
 const About = () => {
-  const [activeTab, setActiveTab] = useState('journey');
+  const [activeTab, setActiveTab] = useState('skills');
 
   const tabs = [
     { id: 'journey', label: 'My Journey' },

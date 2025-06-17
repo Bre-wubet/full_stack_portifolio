@@ -1,6 +1,6 @@
 import express from 'express';
 import Project from '../models/Project.js';
-import authenticateAdmin from '../middleware/auth.js';
+import { authenticateToken } from '../middleware/auth.js';
 import { upload, cloudinary } from '../config/cloudinary.js';
 
 const router = express.Router();
@@ -17,7 +17,7 @@ router.get('/', async (req, res) => {
 });
 
 // Upload project image (admin only)
-router.post('/upload', authenticateAdmin, upload.single('image'), async (req, res) => {
+router.post('/upload', authenticateToken, upload.single('image'), async (req, res) => {
   try {
     console.log('Upload request received:', {
       file: req.file,
@@ -83,7 +83,7 @@ router.post('/upload', authenticateAdmin, upload.single('image'), async (req, re
 });
 
 // Add new project (admin only)
-router.post('/', authenticateAdmin, async (req, res) => {
+router.post('/', authenticateToken, async (req, res) => {
   try {
     const project = new Project({
       ...req.body,
@@ -99,7 +99,7 @@ router.post('/', authenticateAdmin, async (req, res) => {
 });
 
 // Update project (admin only)
-router.put('/:id', authenticateAdmin, async (req, res) => {
+router.put('/:id', authenticateToken, async (req, res) => {
   try {
     const project = await Project.findById(req.params.id);
     if (!project) {
@@ -132,7 +132,7 @@ router.put('/:id', authenticateAdmin, async (req, res) => {
 });
 
 // Delete project (admin only)
-router.delete('/:id', authenticateAdmin, async (req, res) => {
+router.delete('/:id', authenticateToken, async (req, res) => {
   try {
     const project = await Project.findById(req.params.id);
     if (!project) {

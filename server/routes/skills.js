@@ -1,7 +1,7 @@
 import express from 'express';
 const router = express.Router();
 import Skill from '../models/Skill.js';
-import authenticateAdmin from '../middleware/auth.js';
+import { authenticateToken } from '../middleware/auth.js';
 
 // Get all skills
 router.get('/', async (req, res) => {
@@ -14,7 +14,7 @@ router.get('/', async (req, res) => {
 });
 
 // Create a new skill (admin only)
-router.post('/', authenticateAdmin, async (req, res) => {
+router.post('/', authenticateToken, async (req, res) => {
   try {
     const { name, level } = req.body;
     
@@ -35,7 +35,7 @@ router.post('/', authenticateAdmin, async (req, res) => {
 });
 
 // Update a skill (admin only)
-router.put('/:id', authenticateAdmin, async (req, res) => {
+router.put('/:id', authenticateToken, async (req, res) => {
   try {
     const skill = await Skill.findByIdAndUpdate(
       req.params.id,
@@ -50,7 +50,7 @@ router.put('/:id', authenticateAdmin, async (req, res) => {
 });
 
 // Delete a skill (admin only)
-router.delete('/:id', authenticateAdmin, async (req, res) => {
+router.delete('/:id', authenticateToken, async (req, res) => {
   try {
     const skill = await Skill.findByIdAndDelete(req.params.id);
     if (!skill) return res.status(404).json({ message: 'Skill not found' });

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { FaGithub, FaExternalLinkAlt, FaTimes, FaCloudUploadAlt, FaEdit, FaTrash } from 'react-icons/fa';
 import projectService from '../../services/projectService';
 
-export default function AdminProject({ projects, onUpdate }) {
+export default function AdminProject({ projects = [], onUpdate }) {
   const [error, setError] = useState('');
   const [projectForm, setProjectForm] = useState({
     title: '',
@@ -17,6 +17,14 @@ export default function AdminProject({ projects, onUpdate }) {
   const [isEditing, setIsEditing] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [isFormVisible, setIsFormVisible] = useState(false);
+
+  // Ensure projects is always an array and each project has required fields
+  const safeProjects = Array.isArray(projects) ? projects.filter(project => 
+    project && 
+    typeof project === 'object' && 
+    project._id && 
+    project.title
+  ) : [];
 
   const handleError = (err) => {
     if (err.response?.status === 401) {
@@ -275,69 +283,75 @@ export default function AdminProject({ projects, onUpdate }) {
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {projects.map((project) => (
-          <div key={project._id} className="bg-white rounded-lg shadow-md overflow-hidden">
-            <div className="relative aspect-video">
-              <img
-                src={project.imageUrl}
-                alt={project.title}
-                className="w-full h-full object-cover"
-              />
-            </div>
-            <div className="p-4">
-              <h3 className="text-lg font-semibold mb-2">{project.title}</h3>
-              <p className="text-gray-600 mb-4 line-clamp-3">{project.description}</p>
-              <div className="flex flex-wrap gap-2 mb-4">
-                {project.tags.map((tag, index) => (
-                  <span
-                    key={index}
-                    className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-sm"
-                  >
-                    {tag}
-                  </span>
-                ))}
+        {safeProjects.length > 0 ? (
+          safeProjects.map((project) => (
+            <div key={project._id} className="bg-white rounded-lg shadow-md overflow-hidden">
+              <div className="relative aspect-video">
+                <img
+                  src={project.imageUrl || ''}
+                  alt={project.title || 'Project image'}
+                  className="w-full h-full object-cover"
+                />
               </div>
-              <div className="flex justify-between items-center">
-                <div className="flex space-x-2">
-                  {project.githubLink && (
-                    <a
-                      href={project.githubLink}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-gray-600 hover:text-blue-500"
+              <div className="p-4">
+                <h3 className="text-lg font-semibold mb-2">{project.title}</h3>
+                <p className="text-gray-600 mb-4 line-clamp-3">{project.description || ''}</p>
+                <div className="flex flex-wrap gap-2 mb-4">
+                  {(project.tags || []).map((tag, index) => (
+                    <span
+                      key={index}
+                      className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-sm"
                     >
-                      <FaGithub className="text-xl" />
-                    </a>
-                  )}
-                  {project.liveDemo && (
-                    <a
-                      href={project.liveDemo}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-gray-600 hover:text-blue-500"
-                    >
-                      <FaExternalLinkAlt className="text-xl" />
-                    </a>
-                  )}
+                      {tag}
+                    </span>
+                  ))}
                 </div>
-                <div className="flex space-x-2">
-                  <button
-                    onClick={() => handleEditProject(project)}
-                    className="text-blue-600 hover:text-blue-800"
-                  >
-                    <FaEdit />
-                  </button>
-                  <button
-                    onClick={() => handleDeleteProject(project._id)}
-                    className="text-red-600 hover:text-red-800"
-                  >
-                    <FaTrash />
-                  </button>
+                <div className="flex justify-between items-center">
+                  <div className="flex space-x-2">
+                    {project.githubLink && (
+                      <a
+                        href={project.githubLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-gray-600 hover:text-blue-500"
+                      >
+                        <FaGithub className="text-xl" />
+                      </a>
+                    )}
+                    {project.liveDemo && (
+                      <a
+                        href={project.liveDemo}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-gray-600 hover:text-blue-500"
+                      >
+                        <FaExternalLinkAlt className="text-xl" />
+                      </a>
+                    )}
+                  </div>
+                  <div className="flex space-x-2">
+                    <button
+                      onClick={() => handleEditProject(project)}
+                      className="text-blue-600 hover:text-blue-800"
+                    >
+                      <FaEdit />
+                    </button>
+                    <button
+                      onClick={() => handleDeleteProject(project._id)}
+                      className="text-red-600 hover:text-red-800"
+                    >
+                      <FaTrash />
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
+          ))
+        ) : (
+          <div className="col-span-full text-center py-8 text-gray-500">
+            No projects found. Add your first project!
           </div>
-        ))}
+        )}
       </div>
     </div>
   );

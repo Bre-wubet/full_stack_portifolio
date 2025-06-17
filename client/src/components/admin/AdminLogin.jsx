@@ -15,19 +15,28 @@ export default function AdminLogin() {
     setError('');
     setIsLoading(true);
     
+    if (!username || !password) {
+      setError('Please enter both username and password');
+      setIsLoading(false);
+      return;
+    }
+    
     try {
       console.log('Attempting login with username:', username);
-      const success = await login(username, password);
-      if (success) {
-        console.log('Login successful, navigating to dashboard');
-        navigate('/admin/dashboard');
-      } else {
-        console.log('Login failed');
-        setError('Invalid credentials');
-      }
+      await login(username, password);
+      console.log('Login successful, navigating to dashboard');
+      navigate('/admin/dashboard');
     } catch (err) {
       console.error('Login error:', err);
-      setError(err.message || 'An error occurred during login');
+      if (err.response?.status === 401) {
+        setError('Invalid username or password');
+      } else if (err.response?.status === 500) {
+        setError('Server error. Please try again later.');
+      } else if (err.message) {
+        setError(err.message);
+      } else {
+        setError('An error occurred during login');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -51,6 +60,7 @@ export default function AdminLogin() {
           onChange={(e) => setUsername(e.target.value)}
           className="block mb-4 border p-2 w-full rounded"
           disabled={isLoading}
+          required
         />
 
         <label htmlFor="password" className="block text-gray-700 font-medium mb-1">Password</label>
@@ -62,6 +72,7 @@ export default function AdminLogin() {
           onChange={(e) => setPassword(e.target.value)}
           className="block mb-4 border p-2 w-full rounded"
           disabled={isLoading}
+          required
         />
 
         <button 

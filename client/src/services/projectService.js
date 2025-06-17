@@ -22,7 +22,8 @@ const projectService = {
       
       const response = await API.post('/projects/upload', formData, {
         headers: {
-          'Content-Type': 'multipart/form-data'
+          'Content-Type': 'multipart/form-data',
+          'Authorization': `Bearer ${token}`
         },
       });
       
@@ -50,19 +51,30 @@ const projectService = {
   getAllProjects: async () => {
     try {
       const response = await API.get('/projects');
-      return response.data;
+      // Ensure we always return an array
+      return Array.isArray(response.data) ? response.data : [];
     } catch (error) {
       console.error('Error fetching projects:', error);
-      throw error;
+      // Return empty array on error
+      return [];
     }
   },
 
   addProject: async (projectData) => {
     try {
+      const token = localStorage.getItem('adminToken');
+      if (!token) {
+        throw new Error('Please login as admin to add projects');
+      }
+
       const response = await API.post('/projects', {
         ...projectData,
         imageUrl: projectData.imageUrl || '',
         publicId: projectData.publicId || ''
+      }, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
       });
       return response.data;
     } catch (error) {
@@ -76,10 +88,19 @@ const projectService = {
 
   updateProject: async (id, projectData) => {
     try {
+      const token = localStorage.getItem('adminToken');
+      if (!token) {
+        throw new Error('Please login as admin to update projects');
+      }
+
       const response = await API.put(`/projects/${id}`, {
         ...projectData,
         imageUrl: projectData.imageUrl || '',
         publicId: projectData.publicId || ''
+      }, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
       });
       return response.data;
     } catch (error) {
@@ -93,7 +114,16 @@ const projectService = {
 
   deleteProject: async (projectId) => {
     try {
-      const response = await API.delete(`/projects/${projectId}`);
+      const token = localStorage.getItem('adminToken');
+      if (!token) {
+        throw new Error('Please login as admin to delete projects');
+      }
+
+      const response = await API.delete(`/projects/${projectId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
       return response.data;
     } catch (error) {
       console.error('Error deleting project:', error);

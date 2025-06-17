@@ -17,23 +17,44 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     const token = localStorage.getItem('adminToken');
-    setIsAuthenticated(!!token);
-    setLoading(false);
+    if (token) {
+      // Verify token validity
+      API.get('/auth/verify')
+        .then(() => {
+          console.log('Token verification successful');
+          setIsAuthenticated(true);
+        })
+        .catch((error) => {
+          console.error('Token verification failed:', error);
+          localStorage.removeItem('adminToken');
+          setIsAuthenticated(false);
+        })
+        .finally(() => setLoading(false));
+    } else {
+      setLoading(false);
+    }
   }, []);
 
   const login = async (username, password) => {
     try {
-      const response = await API.post('/admin/login', { username, password });
+      console.log('Attempting login with username:', username);
+      const response = await API.post('/auth/login', { username, password });
+      console.log('Login successful:', response.data);
       localStorage.setItem('adminToken', response.data.token);
       setIsAuthenticated(true);
       return true;
     } catch (error) {
-      console.error('Login error:', error);
-      return false;
+      console.error('Login error:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status
+      });
+      throw error;
     }
   };
 
   const logout = () => {
+    console.log('Logging out');
     localStorage.removeItem('adminToken');
     setIsAuthenticated(false);
   };

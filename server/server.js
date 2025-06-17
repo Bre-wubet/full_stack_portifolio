@@ -2,122 +2,196 @@ import cors from 'cors';
 import express from 'express';
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
-import authenticateAdmin from './middleware/auth.js';
 import mongoose from 'mongoose';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import fs from 'fs';
+
+// Import routes
+import authRoutes from './routes/authRoutes.js';
 import projectRoutes from './routes/projects.js';
 import contactRoute from './routes/contact.js';
 import skillRoutes from './routes/skills.js';
 import journeyRoutes from './routes/journeys.js';
+import resumeRoutes from './routes/resume.js';
+import { authenticateToken } from './middleware/auth.js';
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
+// Load environment variables
 dotenv.config();
+
+// Validate required environment variables
+const requiredEnvVars = ['MONGODB_URI', 'PORT', 'ADMIN_USERNAME', 'ADMIN_PASSWORD', 'JWT_SECRET'];
+const missingEnvVars = requiredEnvVars.filter(envVar => !process.env[envVar]);
+
+if (missingEnvVars.length > 0) {
+  console.error('Missing required environment variables:', missingEnvVars);
+  process.exit(1);
+}
+
 const app = express();
-app.use(express.json());
+
+// CORS configuration
+const allowedOrigins = process.env.NODE_ENV === 'production' 
+  ? [process.env.CLIENT_URL] // Add your production client URL
+  : ['http://localhost:5173'];
+
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://localhost:5174'], // Allow both ports
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-// Debug middleware to log all requests
+// Middleware
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Request logging middleware
 app.use((req, res, next) => {
-  console.log(`${req.method} ${req.path}`, {
-    body: req.body,
-    headers: req.headers
-  });
+  console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
   next();
 });
 
-// Serve static files from public directory
-app.use('/uploads', express.static('public/uploads'));
+// Create uploads directories if they don't exist
+const uploadsDir = path.join(__dirname, 'uploads');
+const projectsDir = path.join(uploadsDir, 'projects');
+const resumesDir = path.join(uploadsDir, 'resumes');
 
-// MongoDB connection
-
-mongoose.connect(process.env.MONGODB_URI, { 
-  useNewUrlParser: true, 
-  useUnifiedTopology: true 
-})  .then(() => console.log('MongoDB connected'))
-  .catch(err => console.error('MongoDB connection error:', err));
-
-
-  app.use('/api/contact', contactRoute);
-
-  // API routes
-  app.use('/api/projects', projectRoutes);
-  app.use('/api/skills', skillRoutes);
-  app.use('/api/journeys', journeyRoutes);
-
-// Public route
-app.get('/', (req, res) => {
-  res.send('Welcome to my portfolio!');
-});
-
-// Admin login route
-app.post('/api/admin/login', (req, res) => {
-  try {
-    console.log('Login attempt:', {
-      receivedUsername: req.body.username,
-      receivedPassword: req.body.password ? '****' : undefined,
-      envUsername: process.env.ADMIN_USERNAME,
-      envPassword: process.env.ADMIN_PASSWORD ? '****' : undefined,
-      hasJwtSecret: !!process.env.JWT_SECRET
-    });
-
-    const { username, password } = req.body;
-    
-    // Check if environment variables are set
-    if (!process.env.ADMIN_USERNAME || !process.env.ADMIN_PASSWORD || !process.env.JWT_SECRET) {
-      console.error('Missing environment variables:', {
-        hasAdminUsername: !!process.env.ADMIN_USERNAME,
-        hasAdminPassword: !!process.env.ADMIN_PASSWORD,
-        hasJwtSecret: !!process.env.JWT_SECRET
-      });
-      return res.status(500).json({ message: 'Server configuration error' });
+// Ensure directories exist
+[uploadsDir, projectsDir, resumesDir].forEach(dir => {
+  if (!fs.existsSync(dir)) {
+    try {
+      fs.mkdirSync(dir, { recursive: true });
+      console.log(`Created directory: ${dir}`);
+    } catch (error) {
+      console.error(`Error creating directory ${dir}:`, error);
     }
-
-    // Validate request body
-    if (!username || !password) {
-      console.log('Missing username or password in request');
-      return res.status(400).json({ message: 'Username and password are required' });
-    }
-
-    // Check credentials
-    if (username === process.env.ADMIN_USERNAME && password === process.env.ADMIN_PASSWORD) {
-      console.log('Login successful for user:', username);
-      const token = jwt.sign(
-        { username, role: 'admin' }, 
-        process.env.JWT_SECRET, 
-        { expiresIn: '2h' }
-      );
-      return res.json({ token });
-    }
-
-    // Invalid credentials
-    console.log('Invalid credentials for user:', username);
-    return res.status(401).json({ message: 'Invalid credentials' });
-  } catch (error) {
-    console.error('Login error:', error);
-    res.status(500).json({ 
-      message: 'Internal server error',
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
-    });
   }
 });
 
-// Protected admin route
-app.get('/api/admin/dashboard', authenticateAdmin, (req, res) => {
-  if (req.user.role !== 'admin') {
-    return res.status(403).json({ message: 'Access denied' });
+// Serve static files with proper MIME types
+app.use('/uploads', express.static(path.join(__dirname, 'uploads'), {
+  setHeaders: (res, path) => {
+    if (path.endsWith('.pdf')) {
+      res.set('Content-Type', 'application/pdf');
+    }
   }
-  res.send('Welcome to the admin dashboard.');
-});
+}));
 
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-  console.log('Environment check:', {
-    hasAdminUsername: !!process.env.ADMIN_USERNAME,
-    hasAdminPassword: !!process.env.ADMIN_PASSWORD,
-    hasJwtSecret: !!process.env.JWT_SECRET,
-    hasMongoUri: !!process.env.MONGODB_URI
+// Serve static files from the React app in production
+if (process.env.NODE_ENV === 'production') {
+  const clientBuildPath = path.join(__dirname, '../client/dist');
+  app.use(express.static(clientBuildPath));
+  
+  // Handle React routing, return all requests to React app
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(clientBuildPath, 'index.html'));
+  });
+}
+
+// Health check route
+app.get('/api/health', (req, res) => {
+  res.json({ 
+    status: 'ok', 
+    timestamp: new Date().toISOString(),
+    env: {
+      hasAdminUsername: !!process.env.ADMIN_USERNAME,
+      hasAdminPassword: !!process.env.ADMIN_PASSWORD,
+      hasJwtSecret: !!process.env.JWT_SECRET,
+      nodeEnv: process.env.NODE_ENV
+    }
   });
 });
+
+// Routes
+app.use('/api/auth', authRoutes);
+app.use('/api/projects', projectRoutes);
+app.use('/api/contact', contactRoute);
+app.use('/api/skills', skillRoutes);
+app.use('/api/journeys', journeyRoutes);
+app.use('/api/resume', resumeRoutes);
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error('Error:', {
+    message: err.message,
+    stack: err.stack,
+    path: req.path,
+    method: req.method,
+    body: req.body,
+    env: {
+      hasAdminUsername: !!process.env.ADMIN_USERNAME,
+      hasAdminPassword: !!process.env.ADMIN_PASSWORD,
+      hasJwtSecret: !!process.env.JWT_SECRET,
+      nodeEnv: process.env.NODE_ENV
+    }
+  });
+  
+  res.status(err.status || 500).json({
+    message: err.message || 'Something went wrong!',
+    error: process.env.NODE_ENV === 'development' ? err : {}
+  });
+});
+
+// MongoDB connection with retry logic
+const connectWithRetry = async () => {
+  try {
+    console.log('Attempting to connect to MongoDB...');
+    await mongoose.connect(process.env.MONGODB_URI, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+      serverSelectionTimeoutMS: 5000,
+      socketTimeoutMS: 45000,
+      family: 4
+    });
+    console.log('Connected to MongoDB successfully');
+    
+    // Protected admin route
+    app.get('/api/admin/dashboard', authenticateToken, (req, res) => {
+      if (req.user.role !== 'admin') {
+        return res.status(403).json({ message: 'Access denied' });
+      }
+      res.send('Welcome to the admin dashboard.');
+    });
+
+    const PORT = process.env.PORT || 5000;
+    app.listen(PORT, () => {
+      console.log(`Server is running on port ${PORT}`);
+      console.log('Environment check:', {
+        nodeEnv: process.env.NODE_ENV,
+        hasAdminUsername: !!process.env.ADMIN_USERNAME,
+        hasAdminPassword: !!process.env.ADMIN_PASSWORD,
+        hasJwtSecret: !!process.env.JWT_SECRET,
+        mongoUri: process.env.MONGODB_URI.replace(/\/\/[^:]+:[^@]+@/, '//****:****@') // Hide credentials
+      });
+    });
+  } catch (error) {
+    console.error('MongoDB connection error:', error);
+    console.log('Retrying connection in 5 seconds...');
+    setTimeout(connectWithRetry, 5000);
+  }
+};
+
+// Handle uncaught exceptions
+process.on('uncaughtException', (error) => {
+  console.error('Uncaught Exception:', error);
+  process.exit(1);
+});
+
+// Handle unhandled promise rejections
+process.on('unhandledRejection', (error) => {
+  console.error('Unhandled Rejection:', error);
+  process.exit(1);
+});
+
+// Start the server
+connectWithRetry();

@@ -4,7 +4,8 @@ import { useAuth } from '../../context/AuthContext';
 import AdminProject from './AdminProject';
 import AdminSkill from './AdminSkill';
 import AdminJourney from './AdminJourney';
-import { FaProjectDiagram, FaCode, FaRoad, FaSignOutAlt } from 'react-icons/fa';
+import AdminResume from './AdminResume';
+import { FaProjectDiagram, FaCode, FaRoad, FaFileAlt, FaSignOutAlt } from 'react-icons/fa';
 import projectService from '../../services/projectService';
 import skillService from '../../services/skillService';
 import journeyService from '../../services/journeyService';
@@ -32,30 +33,33 @@ export default function AdminDashboard() {
   const fetchProjects = async () => {
     try {
       const data = await projectService.getAllProjects();
-      setProjects(data);
+      setProjects(Array.isArray(data) ? data : []);
       setError('');
     } catch (err) {
       handleError(err);
+      setProjects([]);
     }
   };
 
   const fetchSkills = async () => {
     try {
       const data = await skillService.getAllSkills();
-      setSkills(data);
+      setSkills(Array.isArray(data) ? data : []);
       setError('');
     } catch (err) {
       handleError(err);
+      setSkills([]);
     }
   };
 
   const fetchJourneys = async () => {
     try {
       const data = await journeyService.getAllJourneys();
-      setJourneys(data);
+      setJourneys(Array.isArray(data) ? data : []);
       setError('');
     } catch (err) {
       handleError(err);
+      setJourneys([]);
     }
   };
 
@@ -75,7 +79,8 @@ export default function AdminDashboard() {
   const tabs = [
     { id: 'projects', label: 'Projects', icon: <FaProjectDiagram /> },
     { id: 'skills', label: 'Skills', icon: <FaCode /> },
-    { id: 'journeys', label: 'Journey', icon: <FaRoad /> }
+    { id: 'journeys', label: 'Journey', icon: <FaRoad /> },
+    { id: 'resume', label: 'Resume', icon: <FaFileAlt /> }
   ];
 
   return (
@@ -179,6 +184,9 @@ export default function AdminDashboard() {
                 journeys={journeys}
                 onUpdate={fetchJourneys}
               />
+            )}
+            {activeTab === 'resume' && (
+              <AdminResume />
             )}
           </div>
         </main>
