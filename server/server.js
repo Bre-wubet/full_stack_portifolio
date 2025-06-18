@@ -93,50 +93,31 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads'), {
   }
 }));
 
-// Serve static files from the client build directory
-const clientBuildPath = path.join(__dirname, '..', 'client', 'dist');
-console.log('Client build path:', clientBuildPath);
-
-// Check if dist directory exists
-if (!fs.existsSync(clientBuildPath)) {
-  console.error('Client build directory not found at:', clientBuildPath);
-  console.log('Current directory:', __dirname);
-  console.log('Parent directory contents:', fs.readdirSync(path.join(__dirname, '..')));
-  console.log('Client directory contents:', fs.readdirSync(path.join(__dirname, '..', 'client')));
-}
-
-// Serve static files
-app.use(express.static(clientBuildPath, {
-  setHeaders: (res, path) => {
-    // Set proper MIME types
-    if (path.endsWith('.js')) {
-      res.setHeader('Content-Type', 'application/javascript');
-    } else if (path.endsWith('.css')) {
-      res.setHeader('Content-Type', 'text/css');
-    } else if (path.endsWith('.html')) {
-      res.setHeader('Content-Type', 'text/html');
-    } else if (path.endsWith('.ico')) {
-      res.setHeader('Content-Type', 'image/x-icon');
-    }
-  }
-}));
-
-// Handle React routing, return all requests to React app
-app.get('*', (req, res, next) => {
-  const indexPath = path.join(clientBuildPath, 'index.html');
-  console.log('Attempting to serve:', req.path);
-  console.log('Looking for index.html at:', indexPath);
+// Serve static files from the React app in production
+if (process.env.NODE_ENV === 'production') {
+  const clientBuildPath = path.join(__dirname, '../client/dist');
+  console.log('Client build path:', clientBuildPath);
   
-  if (fs.existsSync(indexPath)) {
-    res.sendFile(indexPath);
+  // Check if the dist directory exists
+  if (fs.existsSync(clientBuildPath)) {
+    console.log('Client build directory found');
+    app.use(express.static(clientBuildPath));
+    
+    // Handle React routing, return all requests to React app
+    app.get('*', (req, res) => {
+      const indexPath = path.join(clientBuildPath, 'index.html');
+      if (fs.existsSync(indexPath)) {
+        res.sendFile(indexPath);
+      } else {
+        console.error('index.html not found in client build directory');
+        res.status(500).send('Client build is incomplete. Please check the build process.');
+      }
+    });
   } else {
-    console.error('index.html not found at:', indexPath);
-    console.log('Available files in dist:', fs.readdirSync(clientBuildPath));
-    res.status(500).json({
-      error: 'Client build is missing',
-      details: 'index.html not found',
-      path: indexPath,
-      availableFiles: fs.existsSync(clientBuildPath) ? fs.readdirSync(clientBuildPath) : 'dist directory not found'
+    console.error('Client build directory not found at:', clientBuildPath);
+    // Serve a basic message if the dist directory doesn't exist
+    app.get('*', (req, res) => {
+      res.status(500).send('Client build is missing. Please check the build process.');
     });
   }
 });
