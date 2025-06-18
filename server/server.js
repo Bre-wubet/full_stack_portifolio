@@ -95,8 +95,10 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads'), {
 
 // Serve static files from the React app in production
 if (process.env.NODE_ENV === 'production') {
-  const clientBuildPath = path.join(__dirname, '../client/dist');
+  // Update the path to look in the correct location
+  const clientBuildPath = path.join(__dirname, '../../client/dist');
   console.log('Client build path:', clientBuildPath);
+  console.log('Current directory:', __dirname);
   
   // Check if the dist directory exists
   if (fs.existsSync(clientBuildPath)) {
@@ -110,17 +112,26 @@ if (process.env.NODE_ENV === 'production') {
         res.sendFile(indexPath);
       } else {
         console.error('index.html not found in client build directory');
-        res.status(500).send('Client build is incomplete. Please check the build process.');
+        res.status(500).json({
+          error: 'Client build is incomplete',
+          details: 'index.html not found',
+          path: clientBuildPath
+        });
       }
     });
   } else {
     console.error('Client build directory not found at:', clientBuildPath);
     // Serve a basic message if the dist directory doesn't exist
     app.get('*', (req, res) => {
-      res.status(500).send('Client build is missing. Please check the build process.');
+      res.status(500).json({
+        error: 'Client build is missing',
+        details: 'dist directory not found',
+        currentDir: __dirname,
+        parentDirContents: fs.readdirSync(path.join(__dirname, '../'))
+      });
     });
   }
-});
+}
 
 // Health check route
 app.get('/api/health', (req, res) => {
