@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import ProjectCard from '../ProjectCard';
 import projectService from '../../services/projectService';
 
-
 const Projects = () => {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -12,10 +11,13 @@ const Projects = () => {
     const fetchProjects = async () => {
       try {
         const data = await projectService.getAllProjects();
-        setProjects(data);
+        // Ensure data is an array before setting it
+        setProjects(Array.isArray(data) ? data : []);
         setError(null);
       } catch (err) {
+        console.error('Error fetching projects:', err);
         setError('Failed to load projects. Please try again later.');
+        setProjects([]);
       } finally {
         setLoading(false);
       }
@@ -70,6 +72,9 @@ const Projects = () => {
     );
   }
 
+  // Ensure projects is an array before mapping
+  const safeProjects = Array.isArray(projects) ? projects : [];
+
   return (
     <section id="projects" className="py-20 px-4 md:px-8 bg-gradient-to-b from-white to-gray-50">
       <div className="max-w-7xl mx-auto">
@@ -82,9 +87,15 @@ const Projects = () => {
           </p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {projects.map((project) => (
-            <ProjectCard key={project._id} project={project} />
-          ))}
+          {safeProjects.length > 0 ? (
+            safeProjects.map((project) => (
+              <ProjectCard key={project._id} project={project} />
+            ))
+          ) : (
+            <div className="col-span-full text-center py-8 text-gray-500">
+              No projects found. Please check back later!
+            </div>
+          )}
         </div>
       </div>
     </section>

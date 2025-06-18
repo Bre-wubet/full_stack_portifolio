@@ -34,28 +34,50 @@ if (missingEnvVars.length > 0) {
 const app = express();
 
 // CORS configuration
-const allowedOrigins = process.env.NODE_ENV === 'production' 
-  ? [process.env.CLIENT_URL, 'https://briewubet.onrender.com/'] // Add your production URLs
-  : ['http://localhost:5173'];
+const allowedOrigins = [
+  'http://localhost:5000',
+  'https://brwubet.onrender.com',
+  'https://briewubet.onrender.com'
+].filter(Boolean);
 
+// Enable CORS for all routes
 app.use(cors({
-  origin: (origin, callback) => {
+  origin: function(origin, callback) {
     // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) {
+    if (!origin) return callback(null, true);
+    
+    // Allow all origins in development
+    if (process.env.NODE_ENV !== 'production') {
       return callback(null, true);
     }
     
-    if (allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      console.warn(`Origin ${origin} not allowed by CORS`);
-      callback(new Error('Not allowed by CORS'));
+    if (allowedOrigins.indexOf(origin) === -1) {
+      const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
+      return callback(new Error(msg), false);
     }
+    return callback(null, true);
   },
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'X-Requested-With'],
+  exposedHeaders: ['Content-Range', 'X-Content-Range'],
+  maxAge: 86400 // 24 hours
 }));
+
+// Handle preflight requests
+app.options('*', cors());
+
+// Add CORS headers middleware
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  if (origin) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  }
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept, X-Requested-With');
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  next();
+});
 
 // Middleware
 app.use(express.json());
@@ -94,14 +116,26 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads'), {
 }));
 
 // Serve static files from the React app in production
-// Serve React frontend unconditionally
-const clientBuildPath = path.join(__dirname, '../../client/dist');
+// Serve React frontend unconditionallyconst clientBuildPath = path.join(__dirname, '../client/dist');
+
+const clientBuildPath = path.join(__dirname, '../client/dist');
 console.log('Client build path:', clientBuildPath);
 console.log('Current directory:', __dirname);
 
 if (fs.existsSync(clientBuildPath)) {
   console.log('Client build directory found');
-  app.use(express.static(clientBuildPath));
+  app.use(express.static(clientBuildPath, {
+    setHeaders: (res, filePath) => {
+      if (filePath.endsWith('.js')) {
+        res.setHeader('Content-Type', 'application/javascript');
+      } else if (filePath.endsWith('.css')) {
+        res.setHeader('Content-Type', 'text/css');
+      } else if (filePath.endsWith('.svg')) {
+        res.setHeader('Content-Type', 'image/svg+xml');
+      }
+    }
+  }));
+  
 
   // Catch-all route to serve React for non-API routes
   app.get('*', (req, res) => {

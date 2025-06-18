@@ -3,18 +3,17 @@ import axios from 'axios';
 
 const getBaseURL = () => {
   if (import.meta.env.PROD) {
-    // In production, use the same origin since client and server are on the same domain
-    return '/api';
+    return 'https://brwubet.onrender.com/api';
   }
-  // In development, use the proxy configuration
-  return '/api';
+  return 'http://localhost:5000/api';
 };
 
 const API = axios.create({
   baseURL: getBaseURL(),
   withCredentials: true,
   headers: {
-    'Content-Type': 'application/json'
+    'Content-Type': 'application/json',
+    'Accept': 'application/json'
   }
 });
 
@@ -34,6 +33,12 @@ API.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+
+    // Ensure CORS headers are set
+    config.headers['Access-Control-Allow-Origin'] = '*';
+    config.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS';
+    config.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization, Accept';
+    
     return config;
   },
   (error) => {

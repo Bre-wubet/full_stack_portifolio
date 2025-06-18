@@ -4,120 +4,177 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { authenticateToken } from '../middleware/auth.js';
 import Resume from '../models/Resume.js';
-import fs from 'fs';
+import fs from 'fs/promises';
+import cors from 'cors';
 
 const router = express.Router();
+
+// Configure CORS
+router.use(cors({
+  origin: ['http://localhost:5173', 'https://brwubet.onrender.com'],
+  credentials: true
+}));
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+// Ensure uploads directory exists
+const uploadsDir = path.join(__dirname, '../uploads');
+fs.mkdir(uploadsDir, { recursive: true }).catch(console.error);
 
 // Configure multer for file upload
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    const uploadDir = path.join(__dirname, '../uploads/resumes');
-    // Ensure the directory exists
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
-    }
-    cb(null, uploadDir);
+    cb(null, uploadsDir);
   },
   filename: function (req, file, cb) {
-    // Create a unique filename with timestamp
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, `resume-${uniqueSuffix}${path.extname(file.originalname)}`);
+    cb(null, 'resume.pdf');
   }
 });
 
 const upload = multer({ 
   storage: storage,
   fileFilter: (req, file, cb) => {
-    // Accept only PDF files
     if (file.mimetype === 'application/pdf') {
       cb(null, true);
     } else {
       cb(new Error('Only PDF files are allowed!'), false);
     }
-  },
-  limits: {
-    fileSize: 5 * 1024 * 1024 // 5MB limit
   }
 });
 
-// Get current resume
+// Get resume
 router.get('/', async (req, res) => {
   try {
-    const resume = await Resume.findOne().sort({ uploadDate: -1 });
+    const resume = await Resume.findOne();
+    
     if (!resume) {
-      return res.status(404).json({ message: 'No resume found' });
+      return res.status(404).json({ 
+        message: 'No resume found',
+        exists: false
+      });
     }
-    
-    // Ensure the URL is absolute
-    const absoluteUrl = `${req.protocol}://${req.get('host')}${resume.url}`;
-    const resumeData = {
-      ...resume.toObject(),
-      url: absoluteUrl
-    };
-    
-    res.json(resumeData);
+
+    // Check if file exists
+    try {
+      await fs.access(path.join(uploadsDir, resume.filename));
+    } catch (error) {
+      console.error('Resume file not found:', error);
+      return res.status(404).json({ 
+        message: 'Resume file not found',
+        exists: false
+      });
+    }
+
+    // Construct URL based on environment
+    const baseUrl = process.env.NODE_ENV === 'production' 
+      ? 'https://brwubet.onrender.com/api'
+      : 'http://localhost:5000/api';
+
+    const resumeUrl = `${baseUrl}/uploads/${resume.filename}`;
+
+    res.json({
+      url: resumeUrl,
+      filename: resume.filename,
+      exists: true
+    });
   } catch (error) {
     console.error('Error fetching resume:', error);
     res.status(500).json({ 
       message: 'Error fetching resume',
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined,
+      exists: false
     });
   }
 });
 
-// Upload new resume (admin only)
-router.post('/', authenticateToken, upload.single('resume'), async (req, res) => {
+// Upload resume
+router.post('/', upload.single('resume'), async (req, res) => {
   try {
     if (!req.file) {
-      return res.status(400).json({ message: 'No file uploaded' });
+      return res.status(400).json({ 
+        message: 'No file uploaded',
+        exists: false
+      });
     }
 
-    // Delete old resume if exists
-    await Resume.deleteMany({});
+    // Delete existing resume if any
+    const existingResume = await Resume.findOne();
+    if (existingResume) {
+      try {
+        await fs.unlink(path.join(uploadsDir, existingResume.filename));
+        await Resume.deleteOne({ _id: existingResume._id });
+      } catch (error) {
+        console.error('Error deleting existing resume:', error);
+      }
+    }
 
-    // Create new resume entry with absolute URL
+    // Create new resume document
     const resume = new Resume({
       filename: req.file.filename,
-      path: req.file.path,
-      url: `/uploads/resumes/${req.file.filename}`,
-      updatedAt: new Date()
+      originalName: req.file.originalname,
+      mimeType: req.file.mimetype,
+      size: req.file.size
     });
 
     await resume.save();
-    
-    // Return resume with absolute URL
-    const absoluteUrl = `${req.protocol}://${req.get('host')}${resume.url}`;
-    const resumeData = {
-      ...resume.toObject(),
-      url: absoluteUrl
-    };
-    
-    res.status(201).json(resumeData);
+
+    // Construct URL based on environment
+    const baseUrl = process.env.NODE_ENV === 'production' 
+      ? 'https://brwubet.onrender.com/api'
+      : 'http://localhost:5000/api';
+
+    const resumeUrl = `${baseUrl}/uploads/${resume.filename}`;
+
+    res.status(201).json({
+      message: 'Resume uploaded successfully',
+      url: resumeUrl,
+      filename: resume.filename,
+      exists: true
+    });
   } catch (error) {
     console.error('Error uploading resume:', error);
     res.status(500).json({ 
       message: 'Error uploading resume',
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined,
+      exists: false
     });
   }
 });
 
-// Delete current resume (admin only)
-router.delete('/', authenticateToken, async (req, res) => {
+// Delete resume
+router.delete('/', async (req, res) => {
   try {
-    const resume = await Resume.findOne().sort({ uploadDate: -1 });
+    const resume = await Resume.findOne();
+    
     if (!resume) {
-      return res.status(404).json({ message: 'No resume found' });
+      return res.status(404).json({ 
+        message: 'No resume found',
+        exists: false
+      });
     }
 
-    await Resume.deleteMany({});
-    res.json({ message: 'Resume deleted successfully' });
+    // Delete file
+    try {
+      await fs.unlink(path.join(uploadsDir, resume.filename));
+    } catch (error) {
+      console.error('Error deleting resume file:', error);
+    }
+
+    // Delete from database
+    await Resume.deleteOne({ _id: resume._id });
+
+    res.json({ 
+      message: 'Resume deleted successfully',
+      exists: false
+    });
   } catch (error) {
     console.error('Error deleting resume:', error);
-    res.status(500).json({ message: 'Error deleting resume' });
+    res.status(500).json({ 
+      message: 'Error deleting resume',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined,
+      exists: false
+    });
   }
 });
 
-export default router; 
+export default router;

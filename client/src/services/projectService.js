@@ -51,8 +51,28 @@ const projectService = {
   getAllProjects: async () => {
     try {
       const response = await API.get('/projects');
-      // Ensure we always return an array
-      return Array.isArray(response.data) ? response.data : [];
+      // Ensure we always return an array and handle different response structures
+      if (!response.data) {
+        return [];
+      }
+      
+      // If the response is already an array, return it
+      if (Array.isArray(response.data)) {
+        return response.data;
+      }
+      
+      // If the response has a data property that's an array, return that
+      if (response.data.data && Array.isArray(response.data.data)) {
+        return response.data.data;
+      }
+      
+      // If we have a single project object, wrap it in an array
+      if (typeof response.data === 'object' && response.data !== null) {
+        return [response.data];
+      }
+      
+      // If all else fails, return an empty array
+      return [];
     } catch (error) {
       console.error('Error fetching projects:', error);
       // Return empty array on error

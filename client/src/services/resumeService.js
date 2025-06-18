@@ -1,53 +1,92 @@
-import axios from 'axios';
+import API from '../api';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+// Get the base URL based on environment
+const getBaseURL = () => {
+  if (import.meta.env.PROD) {
+    return 'https://brwubet.onrender.com/api';
+  }
+  return 'http://localhost:5000/api';
+};
 
-const resumeService = {
-  // Get current resume
-  getResume: async () => {
-    try {
-      const response = await axios.get(`${API_URL}/resume`);
-      return response.data;
-    } catch (error) {
-      // If it's a 404 error, throw the message from the server
-      if (error.response?.status === 404) {
-        throw new Error(error.response.data.message);
-      }
-      throw error.response?.data || error.message;
+// Create axios instance with default config
+const api = API.create({
+  baseURL: getBaseURL(),
+  withCredentials: true,
+  headers: {
+    'Accept': 'application/json',
+    'Content-Type': 'application/json'
+  }
+});
+
+// Add request interceptor
+api.interceptors.request.use(
+  (config) => {
+    // Log request in development
+    if (!import.meta.env.PROD) {
+      console.log('Making request to:', config.url);
     }
+    return config;
   },
+  (error) => {
+    console.error('Request error:', error);
+    return Promise.reject(error);
+  }
+);
 
-  // Upload new resume
-  uploadResume: async (file) => {
-    try {
-      const formData = new FormData();
-      formData.append('resume', file);
-
-      const response = await axios.post(`${API_URL}/resume`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-          Authorization: `Bearer ${localStorage.getItem('adminToken')}`
-        }
-      });
-      return response.data;
-    } catch (error) {
-      throw error.response?.data || error.message;
+// Add response interceptor
+api.interceptors.response.use(
+  (response) => {
+    // Log response in development
+    if (!import.meta.env.PROD) {
+      console.log('Response received:', response.data);
     }
+    return response;
   },
+  (error) => {
+    console.error('Response error:', error.response?.data || error.message);
+    return Promise.reject(error);
+  }
+);
 
-  // Delete current resume
-  deleteResume: async () => {
-    try {
-      const response = await axios.delete(`${API_URL}/resume`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('adminToken')}`
-        }
-      });
-      return response.data;
-    } catch (error) {
-      throw error.response?.data || error.message;
+const getResume = async () => {
+  try {
+    const response = await API.get('/resume');
+    return response.data;
+  } catch (error) {
+    if (error.response?.status === 404) {
+      return { exists: false, message: 'No resume found' };
     }
+    throw error;
   }
 };
 
-export default resumeService; 
+const uploadResume = async (file) => {
+  const formData = new FormData();
+  formData.append('resume', file);
+
+  try {
+    const response = await API.post('/resume', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+const deleteResume = async () => {
+  try {
+    const response = await API.delete('/resume');
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export default {
+  getResume,
+  uploadResume,
+  deleteResume
+};
