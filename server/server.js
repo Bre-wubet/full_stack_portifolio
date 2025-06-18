@@ -94,44 +94,41 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads'), {
 }));
 
 // Serve static files from the React app in production
-if (process.env.NODE_ENV === 'production') {
-  // Update the path to look in the correct location
-  const clientBuildPath = path.join(__dirname, '../../client/dist');
-  console.log('Client build path:', clientBuildPath);
-  console.log('Current directory:', __dirname);
-  
-  // Check if the dist directory exists
-  if (fs.existsSync(clientBuildPath)) {
-    console.log('Client build directory found');
-    app.use(express.static(clientBuildPath));
-    
-    // Handle React routing, return all requests to React app
-    app.get('*', (req, res) => {
-      const indexPath = path.join(clientBuildPath, 'index.html');
-      if (fs.existsSync(indexPath)) {
-        res.sendFile(indexPath);
-      } else {
-        console.error('index.html not found in client build directory');
-        res.status(500).json({
-          error: 'Client build is incomplete',
-          details: 'index.html not found',
-          path: clientBuildPath
-        });
-      }
-    });
-  } else {
-    console.error('Client build directory not found at:', clientBuildPath);
-    // Serve a basic message if the dist directory doesn't exist
-    app.get('*', (req, res) => {
+// Serve React frontend unconditionally
+const clientBuildPath = path.join(__dirname, '../../client/dist');
+console.log('Client build path:', clientBuildPath);
+console.log('Current directory:', __dirname);
+
+if (fs.existsSync(clientBuildPath)) {
+  console.log('Client build directory found');
+  app.use(express.static(clientBuildPath));
+
+  // Catch-all route to serve React for non-API routes
+  app.get('*', (req, res) => {
+    const indexPath = path.join(clientBuildPath, 'index.html');
+    if (fs.existsSync(indexPath)) {
+      res.sendFile(indexPath);
+    } else {
+      console.error('index.html not found in client build directory');
       res.status(500).json({
-        error: 'Client build is missing',
-        details: 'dist directory not found',
-        currentDir: __dirname,
-        parentDirContents: fs.readdirSync(path.join(__dirname, '../'))
+        error: 'Client build is incomplete',
+        details: 'index.html not found',
+        path: clientBuildPath
       });
+    }
+  });
+} else {
+  console.error('Client build directory not found at:', clientBuildPath);
+  app.get('*', (req, res) => {
+    res.status(500).json({
+      error: 'Client build is missing',
+      details: 'dist directory not found',
+      currentDir: __dirname,
+      parentDirContents: fs.readdirSync(path.join(__dirname, '../'))
     });
-  }
+  });
 }
+
 
 // Health check route
 app.get('/api/health', (req, res) => {
