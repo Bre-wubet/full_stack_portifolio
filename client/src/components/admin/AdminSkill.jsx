@@ -63,6 +63,9 @@ export default function AdminSkill({ skills, onUpdate }) {
     }
   };
 
+  // Ensure skills is always an array before mapping
+  const safeSkills = Array.isArray(skills) ? skills : [];
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -134,7 +137,7 @@ export default function AdminSkill({ skills, onUpdate }) {
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {skills.map((skill) => (
+        {safeSkills.map((skill) => (
           <div key={skill._id} className="bg-white rounded-lg shadow-md p-6">
             <div className="flex justify-between items-start mb-4">
               <h3 className="text-lg font-semibold">{skill.name}</h3>

@@ -1,5 +1,3 @@
-
-
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import skillService from '../../services/skillService';
@@ -7,6 +5,9 @@ import journeyService from '../../services/journeyService';
 
 const About = () => {
   const [activeTab, setActiveTab] = useState('skills');
+  const [journeyItems, setJourneyItems] = useState([]);
+  const [journeyLoading, setJourneyLoading] = useState(true);
+  const [journeyError, setJourneyError] = useState(null);
 
   const tabs = [
     { id: 'journey', label: 'My Journey' },
@@ -14,15 +15,19 @@ const About = () => {
     { id: 'interests', label: 'Interests' }
   ];
 
-  const [journeyItems, setJourneyItems] = useState([]);
-
   useEffect(() => {
     const fetchJourneys = async () => {
       try {
+        setJourneyLoading(true);
         const data = await journeyService.getAllJourneys();
-        setJourneyItems(data);
+        setJourneyItems(Array.isArray(data) ? data : []);
+        setJourneyError(null);
       } catch (error) {
         console.error('Error fetching journeys:', error);
+        setJourneyError('Failed to load journey items');
+        setJourneyItems([]);
+      } finally {
+        setJourneyLoading(false);
       }
     };
     fetchJourneys();
@@ -70,6 +75,12 @@ const About = () => {
     transition: { duration: 0.5 }
   };
 
+  // Ensure skills is always an array before mapping
+  const safeSkills = Array.isArray(skills) ? skills : [];
+
+  // Ensure journeyItems is always an array before mapping
+  const safeJourneyItems = Array.isArray(journeyItems) ? journeyItems : [];
+
   return (
     <section id="about" className="py-20 px-4 md:px-8 bg-gradient-to-b from-blue-50 to-white">
       <div className="max-w-7xl mx-auto">
@@ -111,7 +122,13 @@ const About = () => {
               className="space-y-8"
               {...fadeInUp}
             >
-              {journeyItems.map((item, index) => (
+              {journeyLoading ? (
+                <div className="text-center py-4">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-400 mx-auto"></div>
+                </div>
+              ) : journeyError ? (
+                <div className="text-red-500 text-center py-4">{journeyError}</div>
+              ) : safeJourneyItems.map((item, index) => (
                 <div key={index} className="flex items-start space-x-4">
                   <div className="flex-shrink-0 w-24 text-blue-400 font-bold">{item.year}</div>
                   <div>
@@ -134,7 +151,7 @@ const About = () => {
                 </div>
               ) : error ? (
                 <div className="text-red-500 text-center py-4">{error}</div>
-              ) : skills.map((skill, index) => (
+              ) : safeSkills.map((skill, index) => (
                 <div key={index} className="space-y-2">
                   <div className="flex justify-between">
                     <span className="text-gray-700 font-medium">{skill.name}</span>

@@ -1,22 +1,10 @@
-import axios from 'axios';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/resume';
-
-// Create axios instance with default config
-const api = axios.create({
-  baseURL: API_URL,
-  withCredentials: true,
-  headers: {
-    'Accept': 'application/json',
-    'Content-Type': 'application/json'
-  }
-});
+import API from '../api';
 
 const resumeService = {
   // Get current resume
   getResume: async () => {
     try {
-      const response = await api.get('/resume');
+      const response = await API.get('/resume');
       
       // Ensure we return a consistent object structure
       return {
@@ -49,10 +37,10 @@ const resumeService = {
       const formData = new FormData();
       formData.append('resume', file);
 
-      const response = await api.post('/resume', formData, {
+      const response = await API.post('/resume', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
-          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+          // Authorization header will be set by API interceptor if token exists
         }
       });
       
@@ -73,11 +61,7 @@ const resumeService = {
   // Delete current resume
   deleteResume: async () => {
     try {
-      const response = await api.delete('/resume', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
-        }
-      });
+      const response = await API.delete('/resume');
       
       return {
         ...response.data,

@@ -36,9 +36,7 @@ const app = express();
 // CORS configuration
 const allowedOrigins = [
   'http://localhost:5000',
-  'http://localhost:3000',
   'https://brwubet.onrender.com',
-  'https://www.brwubet.onrender.com'
 ].filter(Boolean);
 
 app.use(cors({
@@ -246,3 +244,8 @@ process.on('unhandledRejection', (error) => {
 
 // Start the server
 connectWithRetry();
+
+app.use('/api', (req, res, next) => {
+  res.set('Cache-Control', 'no-store');
+  next();
+});

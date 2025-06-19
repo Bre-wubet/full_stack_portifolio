@@ -69,6 +69,9 @@ export default function AdminJourney({ journeys, onUpdate }) {
     }
   };
 
+  // Ensure journeys is always an array before mapping
+  const safeJourneys = Array.isArray(journeys) ? journeys : [];
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -164,7 +167,7 @@ export default function AdminJourney({ journeys, onUpdate }) {
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {journeys.map((journey) => (
+        {safeJourneys.map((journey) => (
           <div key={journey._id} className="bg-white rounded-lg shadow-md p-6">
             <div className="flex justify-between items-start mb-4">
               <div>
