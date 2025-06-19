@@ -119,9 +119,31 @@ if (fs.existsSync(clientBuildPath)) {
       }
     }
   }));
-  
 
-  // Catch-all route to serve React for non-API routes
+
+// Health check route
+app.get('/api/health', (req, res) => {
+  res.json({ 
+    status: 'ok', 
+    timestamp: new Date().toISOString(),
+    env: {
+      hasAdminUsername: !!process.env.ADMIN_USERNAME,
+      hasAdminPassword: !!process.env.ADMIN_PASSWORD,
+      hasJwtSecret: !!process.env.JWT_SECRET,
+      nodeEnv: process.env.NODE_ENV
+    }
+  });
+});
+
+// Routes
+app.use('/api/auth', authRoutes);
+app.use('/api/projects', projectRoutes);
+app.use('/api/contact', contactRoute);
+app.use('/api/skills', skillRoutes);
+app.use('/api/journeys', journeyRoutes);
+app.use('/api/resume', resumeRoutes);
+
+    // Catch-all route to serve React for non-API routes
   app.get('*', (req, res) => {
     const indexPath = path.join(clientBuildPath, 'index.html');
     if (fs.existsSync(indexPath)) {
@@ -146,29 +168,6 @@ if (fs.existsSync(clientBuildPath)) {
     });
   });
 }
-
-
-// Health check route
-app.get('/api/health', (req, res) => {
-  res.json({ 
-    status: 'ok', 
-    timestamp: new Date().toISOString(),
-    env: {
-      hasAdminUsername: !!process.env.ADMIN_USERNAME,
-      hasAdminPassword: !!process.env.ADMIN_PASSWORD,
-      hasJwtSecret: !!process.env.JWT_SECRET,
-      nodeEnv: process.env.NODE_ENV
-    }
-  });
-});
-
-// Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/projects', projectRoutes);
-app.use('/api/contact', contactRoute);
-app.use('/api/skills', skillRoutes);
-app.use('/api/journeys', journeyRoutes);
-app.use('/api/resume', resumeRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
