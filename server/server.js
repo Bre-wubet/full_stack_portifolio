@@ -121,33 +121,6 @@ if (fs.existsSync(clientBuildPath)) {
   }));
   
 
-  // Catch-all route to serve React for non-API routes
-  app.get('*', (req, res) => {
-    const indexPath = path.join(clientBuildPath, 'index.html');
-    if (fs.existsSync(indexPath)) {
-      res.sendFile(indexPath);
-    } else {
-      console.error('index.html not found in client build directory');
-      res.status(500).json({
-        error: 'Client build is incomplete',
-        details: 'index.html not found',
-        path: clientBuildPath
-      });
-    }
-  });
-} else {
-  console.error('Client build directory not found at:', clientBuildPath);
-  app.get('*', (req, res) => {
-    res.status(500).json({
-      error: 'Client build is missing',
-      details: 'dist directory not found',
-      currentDir: __dirname,
-      parentDirContents: fs.readdirSync(path.join(__dirname, '../'))
-    });
-  });
-}
-
-
 // Health check route
 app.get('/api/health', (req, res) => {
   res.json({ 
@@ -169,6 +142,32 @@ app.use('/api/contact', contactRoute);
 app.use('/api/skills', skillRoutes);
 app.use('/api/journeys', journeyRoutes);
 app.use('/api/resume', resumeRoutes);
+
+  // Catch-all route to serve React for non-API routes
+app.get('*', (req, res) => {
+  const indexPath = path.join(clientBuildPath, 'index.html');
+  if (fs.existsSync(indexPath)) {
+    res.sendFile(indexPath);
+  } else {
+    console.error('index.html not found in client build directory');
+    res.status(500).json({
+      error: 'Client build is incomplete',
+      details: 'index.html not found',
+      path: clientBuildPath
+    });
+  }
+});
+} else {
+console.error('Client build directory not found at:', clientBuildPath);
+app.get('*', (req, res) => {
+  res.status(500).json({
+    error: 'Client build is missing',
+    details: 'dist directory not found',
+    currentDir: __dirname,
+    parentDirContents: fs.readdirSync(path.join(__dirname, '../'))
+  });
+});
+}
 
 // Error handling middleware
 app.use((err, req, res, next) => {
