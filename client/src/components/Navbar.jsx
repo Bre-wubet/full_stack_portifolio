@@ -31,15 +31,15 @@ const Navbar = () => {
           {/* Desktop Menu */}
           <div className="hidden md:block">
             <div className="ml-10 flex items-center space-x-8">
-              <button onClick={() => scrollToSection('projects')} className="text-pink-600 hover:text-primary transition-colors">
+              <a href="#projects" className="text-pink-600 hover:text-primary transition-colors">
                 Projects
-              </button>
-              <button onClick={() => scrollToSection('about')} className="text-pink-600 hover:text-primary transition-colors">
+              </a>
+              <a href="#about" className="text-pink-600 hover:text-primary transition-colors">
                 About
-              </button>
-              <button onClick={() => scrollToSection('contact')} className="text-pink-600 hover:text-primary transition-colors">
+              </a>
+              <a href="#contact" className="text-pink-600 hover:text-primary transition-colors">
                 Contact
-              </button>
+              </a>
             </div>
           </div>
 
@@ -69,24 +69,27 @@ const Navbar = () => {
       {/* Mobile Menu */}
       <div className={`md:hidden ${isMenuOpen ? 'block' : 'hidden'}`}>
         <div className="px-2 pt-2 pb-3 space-y-1 bg-background/95 backdrop-blur-sm">
-          <button
-            onClick={() => scrollToSection('projects')}
+          <a
+            href="#projects"
             className="block w-full text-left px-3 py-2 text-text hover:text-primary transition-colors"
+            onClick={() => setIsMenuOpen(false)}
           >
             Projects
-          </button>
-          <button
-            onClick={() => scrollToSection('about')}
+          </a>
+          <a
+            href="#about"
             className="block w-full text-left px-3 py-2 text-text hover:text-primary transition-colors"
+            onClick={() => setIsMenuOpen(false)}
           >
             About
-          </button>
-          <button
-            onClick={() => scrollToSection('contact')}
+          </a>
+          <a
+            href="#contact"
             className="block w-full text-left px-3 py-2 text-text hover:text-primary transition-colors"
+            onClick={() => setIsMenuOpen(false)}
           >
             Contact
-          </button>
+          </a>
         </div>
       </div>
     </nav>
