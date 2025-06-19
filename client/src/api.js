@@ -2,28 +2,33 @@
 import axios from 'axios';
 
 const getBaseURL = () => {
-  if (import.meta.env.PROD) {
-    // In production, use the same origin since client and server are on the same domain
-    return '/api';
-  }
-  // In development, use the proxy configuration
-  return '/api';
+  const isDevelopment = import.meta.env.MODE === 'development';
+  const productionUrl = '/api';
+  const developmentUrl = 'http://localhost:5000/api';
+
+  // Log the current environment and URL for debugging
+  console.log('Current environment:', import.meta.env.MODE);
+  console.log('Using API URL:', isDevelopment ? developmentUrl : productionUrl);
+
+  return isDevelopment ? developmentUrl : productionUrl;
 };
 
 const API = axios.create({
   baseURL: getBaseURL(),
   withCredentials: true,
   headers: {
-    'Content-Type': 'application/json'
+    'Content-Type': 'application/json',
+    'Accept': 'application/json'
   }
 });
 
 // Add a request interceptor with proper error handling
 API.interceptors.request.use(
   (config) => {
-    // Only log in development
-    if (!import.meta.env.PROD) {
+    // Log all requests in development
+    if (import.meta.env.MODE === 'development') {
       console.log('Making request to:', config.url, {
+        baseURL: config.baseURL,
         method: config.method,
         headers: config.headers,
         data: config.data
@@ -45,8 +50,8 @@ API.interceptors.request.use(
 // Add a response interceptor for error handling
 API.interceptors.response.use(
   (response) => {
-    // Only log in development
-    if (!import.meta.env.PROD) {
+    // Log all successful responses in development
+    if (import.meta.env.MODE === 'development') {
       console.log('Response received:', {
         url: response.config.url,
         status: response.status,
@@ -56,8 +61,10 @@ API.interceptors.response.use(
     return response;
   },
   (error) => {
+    // Always log errors
     console.error('Response error:', {
       url: error.config?.url,
+      baseURL: error.config?.baseURL,
       status: error.response?.status,
       data: error.response?.data,
       message: error.message
@@ -65,10 +72,7 @@ API.interceptors.response.use(
     
     if (error.response?.status === 401) {
       localStorage.removeItem('adminToken');
-      // Redirect to login page in production
-      if (import.meta.env.PROD) {
-        window.location.href = '/admin';
-      }
+      window.location.href = '/admin';
     }
     return Promise.reject(error);
   }

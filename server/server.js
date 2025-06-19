@@ -35,7 +35,9 @@ const app = express();
 
 // CORS configuration
 const allowedOrigins = [
+  'http://localhost:5173', // Vite development server
   'http://localhost:5000',
+  'http://localhost:3000',
   'https://brwubet.onrender.com',
 ].filter(Boolean);
 
@@ -45,6 +47,7 @@ app.use(cors({
     if (!origin) return callback(null, true);
     
     if (allowedOrigins.indexOf(origin) === -1) {
+      console.log('Blocked origin:', origin); // Add logging for debugging
       const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
       return callback(new Error(msg), false);
     }
