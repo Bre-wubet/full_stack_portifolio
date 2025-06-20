@@ -8,7 +8,7 @@ export default defineConfig(({ command, mode }) => ({
     port: 5173,
     proxy: {
       '/api': {
-        target: 'http://localhost:5000',
+        target: 'https://full-stack-portifolio.onrender.com',
         changeOrigin: true,
         secure: false,
         rewrite: (path) => path.replace(/^\/api/, '/api'),
