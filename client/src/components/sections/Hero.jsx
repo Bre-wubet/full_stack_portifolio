@@ -6,12 +6,17 @@ import resumeService from '../../services/resumeService';
 
 const Hero = () => {
   const imageRef = useRef(null);
+
+  // --- Resume State ---
+  // Holds the URL of the resume and whether it exists
   const [resumeUrl, setResumeUrl] = useState('/documents/Europass_Resume.pdf');
   const [resumeExists, setResumeExists] = useState(false);
 
+  // --- Fetch Resume on Mount ---
   useEffect(() => {
     const fetchResume = async () => {
       try {
+        // Try to get the resume from the backend
         const data = await resumeService.getResume();
         if (data.exists && data.url) {
           setResumeUrl(data.url);
@@ -24,7 +29,6 @@ const Hero = () => {
         setResumeExists(false);
       }
     };
-
     fetchResume();
   }, []);
 
@@ -107,6 +111,7 @@ const Hero = () => {
           </div>
 
           <div className="flex flex-wrap gap-4 sm:gap-6">
+            {/* Hire Me Button */}
             <button
               onClick={() => document.getElementById('contact').scrollIntoView({ behavior: 'smooth' })}
               className="group relative px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-semibold text-white overflow-hidden rounded-xl bg-gradient-to-r from-blue-600 to-blue-400 transition-all duration-300 ease-out hover:scale-105 hover:shadow-[0_0_40px_8px_rgba(28,218,255,0.3)] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
@@ -114,6 +119,7 @@ const Hero = () => {
               <span className="relative z-10">Hire Me</span>
               <div className="absolute inset-0 h-full w-full scale-0 rounded-lg transition-transform duration-300 ease-out group-hover:scale-100 bg-gradient-to-r from-blue-500 to-blue-300"></div>
             </button>
+            {/* LinkedIn Profile Button */}
             <a
               href="https://www.linkedin.com/in/brie-wubet-503076356/"
               target="_blank"
@@ -123,7 +129,8 @@ const Hero = () => {
               <span className="relative z-10">LinkedIn Profile</span>
               <div className="absolute inset-0 h-full w-full scale-0 rounded-lg transition-transform duration-300 ease-out group-hover:scale-100 bg-gradient-to-r from-pink-400 to-pink-200"></div>
             </a>
-            {resumeExists && (
+            {/* Resume Button - Only show if resume exists */}
+            {resumeExists ? (
               <a
                 href={resumeUrl}
                 target="_blank"
@@ -131,6 +138,7 @@ const Hero = () => {
                 className="group relative px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-semibold text-white overflow-hidden rounded-xl bg-gradient-to-r from-pink-400 to-pink-200 transition-all duration-300 ease-out hover:scale-105 hover:shadow-[0_0_40px_8px_rgba(236,72,153,0.3)] focus:outline-none focus:ring-2 focus:ring-pink-500 focus:ring-offset-2"
               >
                 <span className="relative z-10 flex items-center gap-2">
+                  {/* Resume Icon */}
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V7.414A2 2 0 0015.414 6L12 2.586A2 2 0 0010.586 2H6zm5 6a1 1 0 10-2 0v3.586l-1.293-1.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V8z" clipRule="evenodd" />
                   </svg>
@@ -138,6 +146,15 @@ const Hero = () => {
                 </span>
                 <div className="absolute inset-0 h-full w-full scale-0 rounded-lg transition-transform duration-300 ease-out group-hover:scale-100 bg-gradient-to-r from-pink-400 to-pink-200"></div>
               </a>
+            ) : (
+              // Optional: Show a disabled button or message if resume is not available
+              <button
+                disabled
+                className="px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-semibold text-white rounded-xl bg-gray-300 cursor-not-allowed opacity-60"
+                title="Resume not available yet"
+              >
+                Resume (Not Available)
+              </button>
             )}
           </div>
         </div>

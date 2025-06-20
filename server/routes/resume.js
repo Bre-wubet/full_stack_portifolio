@@ -52,19 +52,9 @@ router.get('/', async (req, res) => {
         exists: false
       });
     }
-    
-    // Construct the URL based on the environment
-    let absoluteUrl;
-    if (process.env.NODE_ENV === 'production') {
-      // In production, use the full URL
-      absoluteUrl = `https://brwubet.onrender.com/api${resume.url}`;
-    } else {
-      // In development, use the relative URL
-      absoluteUrl = `/api${resume.url}`;
-    }
 
-    // Check if the file exists
-    const filePath = path.join(__dirname, '..', resume.path);
+    // Always build the file path
+    const filePath = path.join(__dirname, '../uploads/resumes', resume.filename);
     if (!fs.existsSync(filePath)) {
       return res.status(404).json({
         message: 'Resume file not found',
@@ -72,13 +62,19 @@ router.get('/', async (req, res) => {
       });
     }
 
-    const resumeData = {
-      ...resume.toObject(),
+    // Build the URL
+    let absoluteUrl;
+    if (process.env.NODE_ENV === 'production') {
+      absoluteUrl = `https://brwubet.onrender.com/uploads/resumes/${resume.filename}`;
+    } else {
+      absoluteUrl = `/uploads/resumes/${resume.filename}`;
+    }
+
+    res.json({
+      filename: resume.filename,
       url: absoluteUrl,
       exists: true
-    };
-    
-    res.json(resumeData);
+    });
   } catch (error) {
     console.error('Error fetching resume:', error);
     res.status(500).json({ 
@@ -102,43 +98,39 @@ router.post('/', authenticateToken, upload.single('resume'), async (req, res) =>
     // Delete old resume if exists
     const oldResume = await Resume.findOne().sort({ uploadDate: -1 });
     if (oldResume) {
-      const oldFilePath = path.join(__dirname, '..', oldResume.path);
+      const oldFilePath = path.join(__dirname, '../uploads/resumes', oldResume.filename);
       if (fs.existsSync(oldFilePath)) {
         fs.unlinkSync(oldFilePath);
       }
       await Resume.deleteMany({});
     }
 
-    // Create new resume entry with absolute URL
+    // Create new resume entry with only the filename
     const resume = new Resume({
       filename: req.file.filename,
-      path: req.file.path,
-      url: `/uploads/resumes/${req.file.filename}`,
       updatedAt: new Date()
     });
 
     await resume.save();
     
-    // Return resume with absolute URL
+    // Build the URL
     let absoluteUrl;
     if (process.env.NODE_ENV === 'production') {
-      absoluteUrl = `https://brwubet.onrender.com/api${resume.url}`;
+      absoluteUrl = `https://brwubet.onrender.com/uploads/resumes/${resume.filename}`;
     } else {
-      absoluteUrl = `/api${resume.url}`;
+      absoluteUrl = `/uploads/resumes/${resume.filename}`;
     }
 
-    const resumeData = {
-      ...resume.toObject(),
+    res.status(201).json({
+      filename: resume.filename,
       url: absoluteUrl,
       exists: true
-    };
-    
-    res.status(201).json(resumeData);
+    });
   } catch (error) {
     console.error('Error uploading resume:', error);
     // Clean up the uploaded file if there was an error
     if (req.file) {
-      const filePath = path.join(__dirname, '..', req.file.path);
+      const filePath = path.join(__dirname, '../uploads/resumes', req.file.filename);
       if (fs.existsSync(filePath)) {
         fs.unlinkSync(filePath);
       }
@@ -163,7 +155,7 @@ router.delete('/', authenticateToken, async (req, res) => {
     }
 
     // Delete the file from the filesystem
-    const filePath = path.join(__dirname, '..', resume.path);
+    const filePath = path.join(__dirname, '../uploads/resumes', resume.filename);
     if (fs.existsSync(filePath)) {
       fs.unlinkSync(filePath);
     }

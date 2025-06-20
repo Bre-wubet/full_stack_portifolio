@@ -1,11 +1,13 @@
 import cors from 'cors';
 import express from 'express';
-import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
-import mongoose from 'mongoose';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
+
+// Import modules
+import connectDB from './config/db.js';
+import errorHandler from './middleware/errorHandler.js';
 
 // Import routes
 import authRoutes from './routes/authRoutes.js';
@@ -14,7 +16,6 @@ import contactRoute from './routes/contact.js';
 import skillRoutes from './routes/skills.js';
 import journeyRoutes from './routes/journeys.js';
 import resumeRoutes from './routes/resume.js';
-import { authenticateToken } from './middleware/auth.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -31,6 +32,7 @@ if (missingEnvVars.length > 0) {
   process.exit(1);
 }
 
+// Initialize Express app
 const app = express();
 
 // CORS configuration
@@ -43,178 +45,80 @@ const allowedOrigins = [
 
 app.use(cors({
   origin: function(origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
-    
-    if (allowedOrigins.indexOf(origin) === -1) {
-      console.log('Blocked origin:', origin); // Add logging for debugging
-      const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
-      return callback(new Error(msg), false);
+    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      console.log('Blocked origin:', origin);
+      callback(new Error('The CORS policy for this site does not allow access from the specified Origin.'));
     }
-    return callback(null, true);
   },
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
-  exposedHeaders: ['Content-Range', 'X-Content-Range'],
-  maxAge: 86400 // 24 hours
 }));
-
-// Handle preflight requests
-app.options('*', cors());
 
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-// Request logging middleware
 app.use((req, res, next) => {
   console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
   next();
 });
 
-// Create uploads directories if they don't exist
+// Create upload directories
 const uploadsDir = path.join(__dirname, 'uploads');
-const projectsDir = path.join(uploadsDir, 'projects');
+['projects', 'resumes'].forEach(subDir => {
+  const dirPath = path.join(uploadsDir, subDir);
+  if (!fs.existsSync(dirPath)) {
+    fs.mkdirSync(dirPath, { recursive: true });
+    console.log(`Created directory: ${dirPath}`);
+  }
+});
+
+// Serve static assets
+app.use('/uploads', express.static(uploadsDir));
+
+// API Routes
+app.use('/api/auth', authRoutes);
+app.use('/api/projects', projectRoutes);
+app.use('/api/contact', contactRoute);
+app.use('/api/skills', skillRoutes);
+app.use('/api/journeys', journeyRoutes);
+app.use('/api/resume', resumeRoutes);
+
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', time: new Date().toISOString() });
+});
+
+// Warn if no resumes exist at startup
 const resumesDir = path.join(uploadsDir, 'resumes');
-
-// Ensure directories exist
-[uploadsDir, projectsDir, resumesDir].forEach(dir => {
-  if (!fs.existsSync(dir)) {
-    try {
-      fs.mkdirSync(dir, { recursive: true });
-      console.log(`Created directory: ${dir}`);
-    } catch (error) {
-      console.error(`Error creating directory ${dir}:`, error);
-    }
+try {
+  const resumeFiles = fs.readdirSync(resumesDir).filter(f => f.endsWith('.pdf'));
+  if (resumeFiles.length === 0) {
+    console.warn('No resume PDFs found in uploads/resumes. If you are in production, upload a resume using the admin panel.');
+  } else {
+    console.log(`Found ${resumeFiles.length} resume(s) in uploads/resumes.`);
   }
-});
-
-// Serve static files with proper MIME types
-app.use('/uploads', express.static(path.join(__dirname, 'uploads'), {
-  setHeaders: (res, path) => {
-    if (path.endsWith('.pdf')) {
-      res.set('Content-Type', 'application/pdf');
-    }
-  }
-}));
-
-// Serve static files from the React app in production
-// Serve React frontend unconditionallyconst clientBuildPath = path.join(__dirname, '../client/dist');
-
-const clientBuildPath = path.join(__dirname, '../client/dist');
-console.log('Client build path:', clientBuildPath);
-console.log('Current directory:', __dirname);
-
-if (fs.existsSync(clientBuildPath)) {
-  console.log('Client build directory found');
-  app.use(express.static(clientBuildPath, {
-    setHeaders: (res, filePath) => {
-      if (filePath.endsWith('.js')) {
-        res.setHeader('Content-Type', 'application/javascript');
-      } else if (filePath.endsWith('.css')) {
-        res.setHeader('Content-Type', 'text/css');
-      } else if (filePath.endsWith('.svg')) {
-        res.setHeader('Content-Type', 'image/svg+xml');
-      }
-    }
-  }));
-  
-
-  // Catch-all route to serve React for non-API routes
-  app.get('*', (req, res) => {
-    const indexPath = path.join(clientBuildPath, 'index.html');
-    if (fs.existsSync(indexPath)) {
-      res.sendFile(indexPath);
-    } else {
-      console.error('index.html not found in client build directory');
-      res.status(500).json({
-        error: 'Client build is incomplete',
-        details: 'index.html not found',
-        path: clientBuildPath
-      });
-    }
-  });
-} else {
-console.error('Client build directory not found at:', clientBuildPath);
-app.get('*', (req, res) => {
-  res.status(500).json({
-    error: 'Client build is missing',
-    details: 'dist directory not found',
-    currentDir: __dirname,
-    parentDirContents: fs.readdirSync(path.join(__dirname, '../'))
-  });
-});
+} catch (err) {
+  console.warn('Could not read uploads/resumes directory:', err.message);
 }
 
-// Error handling middleware
-app.use((err, req, res, next) => {
-  console.error('Error:', {
-    message: err.message,
-    stack: err.stack,
-    path: req.path,
-    method: req.method,
-    body: req.body,
-    env: {
-      hasAdminUsername: !!process.env.ADMIN_USERNAME,
-      hasAdminPassword: !!process.env.ADMIN_PASSWORD,
-      hasJwtSecret: !!process.env.JWT_SECRET,
-      nodeEnv: process.env.NODE_ENV
-    }
+// Serve frontend
+const clientBuildPath = path.join(__dirname, '../client/dist');
+if (fs.existsSync(clientBuildPath)) {
+  console.log('Serving client build from:', clientBuildPath);
+  app.use(express.static(clientBuildPath));
+  app.get('*', (req, res) => {
+    res.sendFile(path.resolve(clientBuildPath, 'index.html'));
   });
-  
-  res.status(err.status || 500).json({
-    error: err.message || 'Something went wrong!',
-    details: process.env.NODE_ENV === 'development' ? err : undefined,
-    path: req.path,
-    method: req.method
+} else {
+  console.warn('Client build directory not found at:', clientBuildPath);
+  app.get('/', (req, res) => {
+    res.send('Server is running. Client build not found.');
   });
-});
+}
 
-// MongoDB connection with retry logic
-const connectWithRetry = async () => {
-  try {
-    console.log('Attempting to connect to MongoDB...');
-    await mongoose.connect(process.env.MONGODB_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-      serverSelectionTimeoutMS: 5000,
-      socketTimeoutMS: 45000,
-      family: 4
-    });
-    console.log('Connected to MongoDB successfully');
-    
-    // Protected admin route
-    app.get('/api/admin/dashboard', authenticateToken, (req, res) => {
-      if (req.user.role !== 'admin') {
-        return res.status(403).json({ message: 'Access denied' });
-      }
-      res.send('Welcome to the admin dashboard.');
-    });
-
-    const PORT = process.env.PORT || 5000;
-    app.listen(PORT, () => {
-      console.log(`Server is running on port ${PORT}`);
-      console.log('Environment check:', {
-        nodeEnv: process.env.NODE_ENV,
-        hasAdminUsername: !!process.env.ADMIN_USERNAME,
-        hasAdminPassword: !!process.env.ADMIN_PASSWORD,
-        hasJwtSecret: !!process.env.JWT_SECRET,
-        mongoUri: process.env.MONGODB_URI.replace(/\/\/[^:]+:[^@]+@/, '//****:****@') // Hide credentials
-      });
-    });
-  } catch (error) {
-    console.error('MongoDB connection error:', error);
-    console.log('Retrying connection in 5 seconds...');
-    setTimeout(connectWithRetry, 5000);
-  }
-};
-
-// Handle uncaught exceptions
-process.on('uncaughtException', (error) => {
-  console.error('Uncaught Exception:', error);
-  process.exit(1);
-});
+// Error Handling Middleware
+app.use(errorHandler);
 
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (error) => {
@@ -222,10 +126,23 @@ process.on('unhandledRejection', (error) => {
   process.exit(1);
 });
 
-// Start the server
-connectWithRetry();
-
-app.use('/api', (req, res, next) => {
-  res.set('Cache-Control', 'no-store');
-  next();
+// Handle uncaught exceptions
+process.on('uncaughtException', (error) => {
+  console.error('Uncaught Exception:', error);
+  process.exit(1);
 });
+
+// Start Server
+const startServer = async () => {
+  await connectDB();
+  const PORT = process.env.PORT || 5000;
+  app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+    console.log('Environment:', {
+        nodeEnv: process.env.NODE_ENV,
+        adminUser: !!process.env.ADMIN_USERNAME,
+    });
+  });
+};
+
+startServer();
