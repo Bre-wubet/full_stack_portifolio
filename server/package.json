@@ -12,7 +12,8 @@
     "dev": "nodemon server.js",
     "build": "echo 'No build step required for Node.js server'",
     "test": "echo 'No tests specified'",
-    "lint": "echo 'No linting configured'"
+    "lint": "echo 'No linting configured'",
+    "health": "node health-check.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

@@ -29,8 +29,14 @@ const missingEnvVars = requiredEnvVars.filter(envVar => !process.env[envVar]);
 
 if (missingEnvVars.length > 0) {
   console.error('Missing required environment variables:', missingEnvVars);
+  console.error('Please set these environment variables in your Render dashboard');
+  console.error('Current environment variables:', Object.keys(process.env));
   process.exit(1);
 }
+
+// Log successful environment loading
+console.log('Environment variables loaded successfully');
+console.log('Required variables present:', requiredEnvVars);
 
 // Initialize Express app
 const app = express();
@@ -127,26 +133,48 @@ app.use(errorHandler);
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (error) => {
   console.error('Unhandled Rejection:', error);
+  console.error('Stack trace:', error.stack);
   process.exit(1);
 });
 
 // Handle uncaught exceptions
 process.on('uncaughtException', (error) => {
   console.error('Uncaught Exception:', error);
+  console.error('Stack trace:', error.stack);
   process.exit(1);
+});
+
+// Graceful shutdown
+process.on('SIGTERM', () => {
+  console.log('SIGTERM received, shutting down gracefully');
+  process.exit(0);
+});
+
+process.on('SIGINT', () => {
+  console.log('SIGINT received, shutting down gracefully');
+  process.exit(0);
 });
 
 // Start Server
 const startServer = async () => {
-  await connectDB();
-  const PORT = process.env.PORT || 5000;
-  app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
-    console.log('Environment:', {
-        nodeEnv: process.env.NODE_ENV,
-        adminUser: !!process.env.ADMIN_USERNAME,
+  try {
+    console.log('Starting server...');
+    await connectDB();
+    const PORT = process.env.PORT || 5000;
+    console.log('Starting server on port:', PORT);
+    
+    app.listen(PORT, () => {
+      console.log(`Server is running on port ${PORT}`);
+      console.log('Environment:', {
+          nodeEnv: process.env.NODE_ENV,
+          adminUser: !!process.env.ADMIN_USERNAME,
+          port: PORT
+      });
     });
-  });
+  } catch (error) {
+    console.error('Failed to start server:', error);
+    process.exit(1);
+  }
 };
 
 startServer();
