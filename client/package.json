@@ -1,15 +1,16 @@
 {
-  "name": "react-portfolio",
+  "name": "portfolio-frontend",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
+    "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
     "clean": "rimraf dist",
-    "build:prod": "npm run clean && vite build && ls -la dist"
+    "build:prod": "npm run clean && vite build",
+    "deploy:check": "npm run build && echo 'Build successful! Ready for deployment.'"
   },
   "dependencies": {
     "axios": "^1.6.2",
@@ -38,5 +39,8 @@
   },
   "engines": {
     "node": ">=18.0.0"
-  }
+  },
+  "keywords": ["react", "vite", "portfolio", "frontend"],
+  "author": "",
+  "license": "ISC"
 }
