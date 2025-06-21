@@ -46,7 +46,7 @@ const allowedOrigins = [
   'http://localhost:5173', // Vite development server
   'http://localhost:5000',
   'http://localhost:3000',
-  'https://brwubet.onrender.com',
+  'https://briewubet.onrender.com',
   'https://your-frontend-domain.vercel.app', // Add your frontend domain
   'https://your-frontend-domain.netlify.app', // Add your frontend domain
 ].filter(Boolean);
