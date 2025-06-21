@@ -41,6 +41,8 @@ const allowedOrigins = [
   'http://localhost:5000',
   'http://localhost:3000',
   'https://brwubet.onrender.com',
+  'https://your-frontend-domain.vercel.app', // Add your frontend domain
+  'https://your-frontend-domain.netlify.app', // Add your frontend domain
 ].filter(Boolean);
 
 app.use(cors({
@@ -102,20 +104,22 @@ try {
   console.warn('Could not read uploads/resumes directory:', err.message);
 }
 
-// Serve frontend
-const clientBuildPath = path.join(__dirname, '../client/dist');
-if (fs.existsSync(clientBuildPath)) {
-  console.log('Serving client build from:', clientBuildPath);
-  app.use(express.static(clientBuildPath));
-  app.get('*', (req, res) => {
-    res.sendFile(path.resolve(clientBuildPath, 'index.html'));
+// API-only response for root path
+app.get('/', (req, res) => {
+  res.json({ 
+    message: 'Portfolio API Server',
+    version: '1.0.0',
+    endpoints: {
+      health: '/api/health',
+      auth: '/api/auth',
+      projects: '/api/projects',
+      contact: '/api/contact',
+      skills: '/api/skills',
+      journeys: '/api/journeys',
+      resume: '/api/resume'
+    }
   });
-} else {
-  console.warn('Client build directory not found at:', clientBuildPath);
-  app.get('/', (req, res) => {
-    res.send('Server is running. Client build not found.');
-  });
-}
+});
 
 // Error Handling Middleware
 app.use(errorHandler);
